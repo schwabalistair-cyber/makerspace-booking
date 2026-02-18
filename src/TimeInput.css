@@ -1,0 +1,151 @@
+.time-input-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.time-input-container label {
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #2c3e50;
+  font-size: 16px;
+}
+
+.time-display {
+  border: 2px solid #3498db;
+  border-radius: 8px;
+  padding: 15px 30px;
+  background-color: white;
+  font-size: 24px;
+  font-weight: bold;
+  color: #2c3e50;
+  cursor: pointer;
+  min-width: 150px;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.time-display:hover {
+  background-color: #f0f8ff;
+  border-color: #2980b9;
+}
+
+.keypad-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+.keypad {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  min-width: 320px;
+}
+
+.keypad-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.keypad-header span {
+  font-weight: bold;
+  color: #2c3e50;
+  font-size: 18px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 32px;
+  color: #95a5a6;
+  cursor: pointer;
+  padding: 0;
+  width: auto;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  color: #e74c3c;
+}
+
+.keypad-display {
+  background-color: #ecf0f1;
+  padding: 20px;
+  border-radius: 8px;
+  font-size: 36px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 10px;
+  letter-spacing: 8px;
+  color: #2c3e50;
+  font-family: 'Courier New', monospace;
+}
+
+.keypad-hint {
+  font-size: 12px;
+  color: #7f8c8d;
+  text-align: center;
+  margin-bottom: 15px;
+  line-height: 1.4;
+}
+
+.keypad-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.keypad-buttons button {
+  padding: 20px;
+  font-size: 24px;
+  font-weight: bold;
+  border: 2px solid #bdc3c7;
+  border-radius: 8px;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.keypad-buttons button:hover {
+  background-color: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+.keypad-buttons button:active {
+  transform: scale(0.95);
+}
+
+.done-btn {
+  width: 100%;
+  padding: 15px;
+  font-size: 18px;
+  font-weight: bold;
+  background-color: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.done-btn:hover {
+  background-color: #229954;
+}
