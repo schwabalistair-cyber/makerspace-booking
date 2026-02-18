@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: makerspace-booking
+    runtime: node
+    buildCommand: npm run render-build
+    startCommand: cd backend && node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true

@@ -28,7 +28,7 @@ function Auth({ onLogin }) {
         ? { email: formData.email, password: formData.password }
         : formData;
 
-      const response = await fetch(`http://localhost:5001${endpoint}`, {
+      const response = await fetch(`${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

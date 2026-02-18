@@ -19,7 +19,7 @@ function AdminDashboard({ user, onBack }) {
 
   const fetchBookings = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/bookings');
+      const response = await fetch('/api/bookings');
       if (response.ok) {
         const data = await response.json();
         setBookings(data);
@@ -31,7 +31,7 @@ function AdminDashboard({ user, onBack }) {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/users');
+      const response = await fetch('/api/users');
       if (response.ok) {
         const data = await response.json();
         setUsers(data);
@@ -45,7 +45,7 @@ function AdminDashboard({ user, onBack }) {
     if (!window.confirm('Are you sure you want to cancel this booking?')) return;
 
     try {
-      const response = await fetch(`http://localhost:5001/api/bookings/${bookingId}`, {
+      const response = await fetch(`/api/bookings/${bookingId}`, {
         method: 'DELETE'
       });
       if (response.ok) {
@@ -60,7 +60,7 @@ function AdminDashboard({ user, onBack }) {
     if (!window.confirm('Are you sure you want to delete this user?')) return;
 
     try {
-      const response = await fetch(`http://localhost:5001/api/users/${userId}`, {
+      const response = await fetch(`/api/users/${userId}`, {
         method: 'DELETE'
       });
       if (response.ok) {
@@ -73,7 +73,7 @@ function AdminDashboard({ user, onBack }) {
 
   const handleChangeUserType = async (userId, newType) => {
     try {
-      const response = await fetch(`http://localhost:5001/api/users/${userId}`, {
+      const response = await fetch(`/api/users/${userId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userType: newType })
@@ -107,7 +107,7 @@ function AdminDashboard({ user, onBack }) {
     };
 
     try {
-      const response = await fetch('http://localhost:5001/api/bookings', {
+      const response = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(bookingData)

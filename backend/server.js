@@ -1,16 +1,17 @@
 const express = require('express');
-const cors = require('cors');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
 
 const app = express();
-const PORT = 5001;
-const SECRET_KEY = 'your-secret-key-change-this-later'; // For JWT tokens
+const PORT = process.env.PORT || 5001;
+const SECRET_KEY = process.env.SECRET_KEY || 'your-secret-key-change-this-later';
 
 // Middleware
-app.use(cors());
 app.use(bodyParser.json());
+
+// Serve React build files in production
+app.use(express.static(path.join(__dirname, '..', 'build')));
 
 // Path to bookings file
 const bookingsFile = path.join(__dirname, 'bookings.json');
@@ -186,9 +187,14 @@ app.post('/api/classes/:id/enroll', (req, res) => {
   res.json(classItem);
 });
 
+// Catch-all: serve React app for client-side routing
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'build', 'index.html'));
+});
+
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:5001`);
+  console.log(`Server running on port ${PORT}`);
 });
 
 const bcrypt = require('bcrypt');

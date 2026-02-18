@@ -43,7 +43,7 @@ function ClassesManager() {
 
   const fetchClasses = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/classes');
+      const response = await fetch('/api/classes');
       if (response.ok) {
         const data = await response.json();
         setClasses(data);
@@ -84,8 +84,8 @@ function ClassesManager() {
     
     try {
       const url = editingClass 
-        ? `http://localhost:5001/api/classes/${editingClass.id}`
-        : 'http://localhost:5001/api/classes';
+        ? `/api/classes/${editingClass.id}`
+        : '/api/classes';
       
       const method = editingClass ? 'PATCH' : 'POST';
       
@@ -126,7 +126,7 @@ function ClassesManager() {
     if (!window.confirm('Delete this class?')) return;
     
     try {
-      const response = await fetch(`http://localhost:5001/api/classes/${id}`, {
+      const response = await fetch(`/api/classes/${id}`, {
         method: 'DELETE'
       });
       if (response.ok) {
