@@ -1,3 +1,7 @@
+databases:
+  - name: makerspace-db
+    plan: free
+
 services:
   - type: web
     name: makerspace-booking
@@ -9,3 +13,7 @@ services:
         value: production
       - key: SECRET_KEY
         generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: makerspace-db
+          property: connectionString
