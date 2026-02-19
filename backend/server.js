@@ -4,6 +4,7 @@ const path = require('path');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { pool, initDb } = require('./db');
+const { authenticate, requireAdmin, loginLimiter } = require('./middleware');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -16,7 +17,7 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '..', 'build')));
 
 // GET all bookings
-app.get('/api/bookings', async (req, res) => {
+app.get('/api/bookings', authenticate, async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM bookings ORDER BY created_at DESC');
     const bookings = result.rows.map(row => ({
@@ -42,7 +43,7 @@ app.get('/api/bookings', async (req, res) => {
 });
 
 // POST a new booking
-app.post('/api/bookings', async (req, res) => {
+app.post('/api/bookings', authenticate, async (req, res) => {
   try {
     const { name, email, userId, userType, date, timeSlot, shopArea, rateCharged, rateLabel, bookedByAdmin, adminId } = req.body;
     const result = await pool.query(
@@ -73,7 +74,7 @@ app.post('/api/bookings', async (req, res) => {
 });
 
 // DELETE a booking
-app.delete('/api/bookings/:id', async (req, res) => {
+app.delete('/api/bookings/:id', authenticate, requireAdmin, async (req, res) => {
   try {
     await pool.query('DELETE FROM bookings WHERE id = $1', [req.params.id]);
     res.json({ message: 'Booking deleted' });
@@ -84,7 +85,7 @@ app.delete('/api/bookings/:id', async (req, res) => {
 });
 
 // GET all users (admin only)
-app.get('/api/users', async (req, res) => {
+app.get('/api/users', authenticate, requireAdmin, async (req, res) => {
   try {
     const result = await pool.query('SELECT id, email, name, user_type, created_at FROM users ORDER BY created_at DESC');
     const users = result.rows.map(row => ({
@@ -102,7 +103,7 @@ app.get('/api/users', async (req, res) => {
 });
 
 // UPDATE user type
-app.patch('/api/users/:id', async (req, res) => {
+app.patch('/api/users/:id', authenticate, requireAdmin, async (req, res) => {
   try {
     const { userType } = req.body;
     const result = await pool.query(
@@ -127,7 +128,7 @@ app.patch('/api/users/:id', async (req, res) => {
 });
 
 // DELETE user
-app.delete('/api/users/:id', async (req, res) => {
+app.delete('/api/users/:id', authenticate, requireAdmin, async (req, res) => {
   try {
     await pool.query('DELETE FROM users WHERE id = $1', [req.params.id]);
     res.json({ message: 'User deleted' });
@@ -175,7 +176,7 @@ app.get('/api/classes', async (req, res) => {
 });
 
 // POST create new class
-app.post('/api/classes', async (req, res) => {
+app.post('/api/classes', authenticate, requireAdmin, async (req, res) => {
   try {
     const { title, series, instructor, sessions, duration, maxCapacity, price, description, prerequisites } = req.body;
     const result = await pool.query(
@@ -205,7 +206,7 @@ app.post('/api/classes', async (req, res) => {
 });
 
 // PATCH update class
-app.patch('/api/classes/:id', async (req, res) => {
+app.patch('/api/classes/:id', authenticate, requireAdmin, async (req, res) => {
   try {
     const { title, series, instructor, sessions, duration, maxCapacity, price, description, prerequisites } = req.body;
     const result = await pool.query(
@@ -248,7 +249,7 @@ app.patch('/api/classes/:id', async (req, res) => {
 });
 
 // DELETE class
-app.delete('/api/classes/:id', async (req, res) => {
+app.delete('/api/classes/:id', authenticate, requireAdmin, async (req, res) => {
   try {
     await pool.query('DELETE FROM classes WHERE id = $1', [req.params.id]);
     res.json({ message: 'Class deleted' });
@@ -259,7 +260,7 @@ app.delete('/api/classes/:id', async (req, res) => {
 });
 
 // POST enroll student in class
-app.post('/api/classes/:id/enroll', async (req, res) => {
+app.post('/api/classes/:id/enroll', authenticate, async (req, res) => {
   try {
     const classId = req.params.id;
     const { userId, userName, userEmail } = req.body;
@@ -326,7 +327,7 @@ app.post('/api/classes/:id/enroll', async (req, res) => {
 });
 
 // REGISTER new user
-app.post('/api/auth/register', async (req, res) => {
+app.post('/api/auth/register', loginLimiter, async (req, res) => {
   try {
     const { email, password, name, userType } = req.body;
 
@@ -374,7 +375,7 @@ app.post('/api/auth/register', async (req, res) => {
 });
 
 // LOGIN user
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -420,31 +421,8 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // GET current user (verify token)
-app.get('/api/auth/me', async (req, res) => {
-  try {
-    const token = req.headers.authorization?.split(' ')[1];
-
-    if (!token) {
-      return res.status(401).json({ error: 'No token provided' });
-    }
-
-    const decoded = jwt.verify(token, SECRET_KEY);
-    const result = await pool.query('SELECT id, email, name, user_type FROM users WHERE id = $1', [decoded.id]);
-
-    if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'User not found' });
-    }
-
-    const user = result.rows[0];
-    res.json({
-      id: user.id.toString(),
-      email: user.email,
-      name: user.name,
-      userType: user.user_type
-    });
-  } catch (error) {
-    res.status(401).json({ error: 'Invalid token' });
-  }
+app.get('/api/auth/me', authenticate, (req, res) => {
+  res.json(req.user);
 });
 
 // Catch-all: serve React app for client-side routing
