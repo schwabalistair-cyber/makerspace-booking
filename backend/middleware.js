@@ -14,7 +14,7 @@ const authenticate = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, SECRET_KEY);
-    const result = await pool.query('SELECT id, email, name, user_type FROM users WHERE id = $1', [decoded.id]);
+    const result = await pool.query('SELECT id, email, name, user_type, is_instructor FROM users WHERE id = $1', [decoded.id]);
 
     if (result.rows.length === 0) {
       return res.status(401).json({ error: 'User not found' });
@@ -25,7 +25,8 @@ const authenticate = async (req, res, next) => {
       id: user.id.toString(),
       email: user.email,
       name: user.name,
-      userType: user.user_type
+      userType: user.user_type,
+      isInstructor: user.is_instructor || false
     };
     next();
   } catch (error) {
@@ -50,4 +51,12 @@ const loginLimiter = rateLimit({
   legacyHeaders: false
 });
 
-module.exports = { authenticate, requireAdmin, loginLimiter };
+// Check if authenticated user is an instructor
+const requireInstructor = (req, res, next) => {
+  if (!req.user.isInstructor) {
+    return res.status(403).json({ error: 'Forbidden — instructor access required' });
+  }
+  next();
+};
+
+module.exports = { authenticate, requireAdmin, requireInstructor, loginLimiter };

@@ -61,6 +61,25 @@ async function initDb() {
       enrolled_at TIMESTAMPTZ DEFAULT NOW()
     )
   `);
+
+  // Add instructor flag to users
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_instructor BOOLEAN DEFAULT FALSE`);
+
+  // Add instructor foreign key to classes
+  await pool.query(`ALTER TABLE classes ADD COLUMN IF NOT EXISTS instructor_id INTEGER REFERENCES users(id)`);
+
+  // Create attendance table for per-session check-in
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS attendance (
+      id SERIAL PRIMARY KEY,
+      class_id INTEGER REFERENCES classes(id) ON DELETE CASCADE,
+      enrolled_student_id INTEGER REFERENCES enrolled_students(id) ON DELETE CASCADE,
+      session_date TEXT NOT NULL,
+      present BOOLEAN DEFAULT FALSE,
+      checked_in_at TIMESTAMPTZ,
+      UNIQUE(class_id, enrolled_student_id, session_date)
+    )
+  `);
 }
 
 module.exports = { pool, initDb };

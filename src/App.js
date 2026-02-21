@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import BookingCalendar from './BookingCalendar';
 import Auth from './Auth';
 import AdminDashboard from './AdminDashboard';
+import InstructorDashboard from './InstructorDashboard';
 
 function App() {
   const [formData, setFormData] = useState({
@@ -16,13 +17,27 @@ function App() {
   const [submitted, setSubmitted] = useState(false);
   const [user, setUser] = useState(null);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showInstructor, setShowInstructor] = useState(false);
 
-  // Check if user is already logged in
+  // Check if user is already logged in, and refresh from server
   useEffect(() => {
     const token = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
     if (token && savedUser) {
       setUser(JSON.parse(savedUser));
+      // Refresh user data from server (e.g. isInstructor may have changed)
+      fetch('/api/auth/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data) {
+            const updatedUser = { ...JSON.parse(savedUser), ...data };
+            setUser(updatedUser);
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+          }
+        })
+        .catch(() => {});
     }
   }, []);
 
@@ -43,6 +58,7 @@ function App() {
     });
     setSubmitted(false);
     setShowAdmin(false);
+    setShowInstructor(false);
   };
 
   const handleSlotSelection = async (slotData) => {
@@ -98,6 +114,11 @@ function App() {
     <header>
       <h1>Makerspace Booking System</h1>
       <div className="user-info">
+        {user && user.isInstructor && (
+          <button className="instructor-btn" onClick={() => setShowInstructor(true)}>
+            Upcoming Classes
+          </button>
+        )}
         {user && user.userType === 'admin' && (
           <button className="admin-btn" onClick={() => setShowAdmin(true)}>
             Admin Dashboard
@@ -116,6 +137,11 @@ function App() {
   // If not logged in show auth screen
   if (!user) {
     return <Auth onLogin={handleLogin} />;
+  }
+
+  // Show instructor dashboard
+  if (showInstructor && user.isInstructor) {
+    return <InstructorDashboard user={user} onBack={() => setShowInstructor(false)} />;
   }
 
   // Show admin dashboard

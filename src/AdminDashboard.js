@@ -95,6 +95,24 @@ function AdminDashboard({ user, onBack }) {
     }
   };
 
+  const handleToggleInstructor = async (userId, isInstructor) => {
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ isInstructor })
+      });
+      if (response.ok) {
+        setUsers(users.map(u => u.id === userId ? { ...u, isInstructor } : u));
+      }
+    } catch (error) {
+      console.error('Error updating instructor status:', error);
+    }
+  };
+
   const handleBookForClient = async (slotData) => {
     if (!bookingForUser) {
       alert('Please select a client first');
@@ -231,6 +249,7 @@ function AdminDashboard({ user, onBack }) {
                 <span>Name</span>
                 <span>Email</span>
                 <span>Account Type</span>
+                <span>Instructor</span>
                 <span>Joined</span>
                 <span>Actions</span>
               </div>
@@ -250,6 +269,14 @@ function AdminDashboard({ user, onBack }) {
                       <option value="cave-pro">Cave Pro</option>
                       <option value="admin">Admin</option>
                     </select>
+                  </span>
+                  <span>
+                    <input
+                      type="checkbox"
+                      checked={u.isInstructor || false}
+                      onChange={(e) => handleToggleInstructor(u.id, e.target.checked)}
+                      className="instructor-checkbox"
+                    />
                   </span>
                   <span>{new Date(u.createdAt).toLocaleDateString()}</span>
                   <span>

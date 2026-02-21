@@ -1,0 +1,217 @@
+.instructor-dashboard {
+  min-height: 100vh;
+  background-color: #f5f6fa;
+  font-family: Arial, sans-serif;
+}
+
+.instructor-header {
+  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+  color: white;
+  padding: 20px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.instructor-header-left h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.instructor-header-left span {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.instructor-content {
+  padding: 30px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Class List */
+.instructor-class-list h2 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+}
+
+.no-classes-message {
+  background: white;
+  padding: 40px;
+  text-align: center;
+  border-radius: 8px;
+  color: #666;
+  font-size: 16px;
+}
+
+.instructor-class-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-bottom: 15px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  overflow: hidden;
+}
+
+.instructor-class-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.instructor-class-card-header {
+  background: linear-gradient(135deg, #27ae60, #219a52);
+  color: white;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.instructor-class-card-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.series-badge {
+  background: rgba(255,255,255,0.2);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.instructor-class-card-body {
+  padding: 15px 20px;
+}
+
+.instructor-class-card-body p {
+  margin: 5px 0;
+  font-size: 14px;
+  color: #444;
+}
+
+/* Class Detail */
+.back-to-list {
+  background: none;
+  border: 2px solid #27ae60;
+  color: #27ae60;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  width: auto;
+  margin-bottom: 20px;
+}
+
+.back-to-list:hover {
+  background: #27ae60;
+  color: white;
+}
+
+.class-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.class-detail-header h2 {
+  margin: 0;
+  color: #2c3e50;
+}
+
+.class-detail-info {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-bottom: 25px;
+}
+
+.class-detail-info p {
+  margin: 8px 0;
+  font-size: 15px;
+  color: #444;
+}
+
+/* Session Tabs */
+.session-tabs h3 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.session-tab-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.session-tab {
+  padding: 8px 16px;
+  border: 2px solid #ddd;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  width: auto;
+  color: #666;
+}
+
+.session-tab:hover {
+  border-color: #27ae60;
+  color: #27ae60;
+}
+
+.session-tab.active {
+  background: #27ae60;
+  color: white;
+  border-color: #27ae60;
+}
+
+/* Attendance */
+.attendance-section h3 {
+  color: #2c3e50;
+  margin-bottom: 15px;
+}
+
+.no-students {
+  color: #666;
+  font-style: italic;
+}
+
+.attendance-list {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.attendance-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr 80px;
+  background: #2c3e50;
+  color: white;
+  padding: 12px 20px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.attendance-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 80px;
+  padding: 12px 20px;
+  border-bottom: 1px solid #eee;
+  align-items: center;
+  font-size: 14px;
+}
+
+.attendance-row:hover {
+  background-color: #f8f9fa;
+}
+
+.attendance-checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}

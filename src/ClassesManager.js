@@ -7,10 +7,13 @@ function ClassesManager() {
   const [showForm, setShowForm] = useState(false);
   const [editingClass, setEditingClass] = useState(null);
   
+  const [instructors, setInstructors] = useState([]);
+
   const [formData, setFormData] = useState({
     title: '',
     series: '',
     instructor: '',
+    instructorId: '',
     sessions: [{ date: '', time: '' }],
     duration: '',
     maxCapacity: '',
@@ -39,6 +42,7 @@ function ClassesManager() {
 
   useEffect(() => {
     fetchClasses();
+    fetchInstructors();
   }, []);
 
   const fetchClasses = async () => {
@@ -50,6 +54,34 @@ function ClassesManager() {
       }
     } catch (error) {
       console.error('Error fetching classes:', error);
+    }
+  };
+
+  const fetchInstructors = async () => {
+    try {
+      const response = await fetch('/api/users/instructors', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setInstructors(data);
+      }
+    } catch (error) {
+      console.error('Error fetching instructors:', error);
+    }
+  };
+
+  const handleInstructorChange = (e) => {
+    const selectedId = e.target.value;
+    if (selectedId === '') {
+      setFormData({ ...formData, instructorId: '', instructor: '' });
+    } else {
+      const selected = instructors.find(i => i.id === selectedId);
+      setFormData({
+        ...formData,
+        instructorId: selectedId,
+        instructor: selected ? selected.name : ''
+      });
     }
   };
 
@@ -115,6 +147,7 @@ function ClassesManager() {
       title: classItem.title,
       series: classItem.series,
       instructor: classItem.instructor,
+      instructorId: classItem.instructorId || '',
       sessions: classItem.sessions || [{ date: classItem.date, time: classItem.time }],
       duration: classItem.duration,
       maxCapacity: classItem.maxCapacity,
@@ -146,6 +179,7 @@ function ClassesManager() {
       title: '',
       series: '',
       instructor: '',
+      instructorId: '',
       sessions: [{ date: '', time: '' }],
       duration: '',
       maxCapacity: '',
@@ -276,13 +310,17 @@ function ClassesManager() {
 
             <div className="form-group">
               <label>Instructor *</label>
-              <input
-                type="text"
-                name="instructor"
-                value={formData.instructor}
-                onChange={handleInputChange}
+              <select
+                name="instructorId"
+                value={formData.instructorId}
+                onChange={handleInstructorChange}
                 required
-              />
+              >
+                <option value="">Select instructor...</option>
+                {instructors.map(inst => (
+                  <option key={inst.id} value={inst.id}>{inst.name}</option>
+                ))}
+              </select>
             </div>
 
             <div className="form-group">
