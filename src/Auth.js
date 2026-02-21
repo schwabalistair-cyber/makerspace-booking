@@ -126,7 +126,7 @@ function Auth({ onLogin }) {
                   name="address"
                   value={formData.address}
                   onChange={handleChange}
-                  placeholder="Optional"
+                  required
                 />
               </div>
 
@@ -137,7 +137,7 @@ function Auth({ onLogin }) {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  placeholder="Optional"
+                  required
                 />
               </div>
 
@@ -148,6 +148,7 @@ function Auth({ onLogin }) {
                   name="birthDate"
                   value={formData.birthDate}
                   onChange={handleChange}
+                  required
                 />
               </div>
 
@@ -160,7 +161,7 @@ function Auth({ onLogin }) {
                   name="emergencyContactName"
                   value={formData.emergencyContactName}
                   onChange={handleChange}
-                  placeholder="Optional"
+                  required
                 />
               </div>
 
@@ -171,7 +172,7 @@ function Auth({ onLogin }) {
                   name="emergencyContactPhone"
                   value={formData.emergencyContactPhone}
                   onChange={handleChange}
-                  placeholder="Optional"
+                  required
                 />
               </div>
 
@@ -181,6 +182,7 @@ function Auth({ onLogin }) {
                   name="emergencyContactRelationship"
                   value={formData.emergencyContactRelationship}
                   onChange={handleChange}
+                  required
                 >
                   <option value="">-- Select --</option>
                   <option value="Spouse">Spouse</option>
