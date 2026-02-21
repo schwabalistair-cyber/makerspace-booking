@@ -124,7 +124,7 @@ app.get('/api/users/instructors', authenticate, async (req, res) => {
 // UPDATE user type and/or instructor flag
 app.patch('/api/users/:id', authenticate, requireAdmin, async (req, res) => {
   try {
-    const { userType, isInstructor } = req.body;
+    const { userType, isInstructor, address, phone, birthDate, emergencyContactName, emergencyContactPhone, emergencyContactRelationship } = req.body;
 
     // Build dynamic update
     const updates = [];
@@ -138,6 +138,30 @@ app.patch('/api/users/:id', authenticate, requireAdmin, async (req, res) => {
     if (isInstructor !== undefined) {
       updates.push(`is_instructor = $${paramIndex++}`);
       values.push(isInstructor);
+    }
+    if (address !== undefined) {
+      updates.push(`address = $${paramIndex++}`);
+      values.push(address);
+    }
+    if (phone !== undefined) {
+      updates.push(`phone = $${paramIndex++}`);
+      values.push(phone);
+    }
+    if (birthDate !== undefined) {
+      updates.push(`birth_date = $${paramIndex++}`);
+      values.push(birthDate);
+    }
+    if (emergencyContactName !== undefined) {
+      updates.push(`emergency_contact_name = $${paramIndex++}`);
+      values.push(emergencyContactName);
+    }
+    if (emergencyContactPhone !== undefined) {
+      updates.push(`emergency_contact_phone = $${paramIndex++}`);
+      values.push(emergencyContactPhone);
+    }
+    if (emergencyContactRelationship !== undefined) {
+      updates.push(`emergency_contact_relationship = $${paramIndex++}`);
+      values.push(emergencyContactRelationship);
     }
 
     if (updates.length === 0) {
@@ -175,6 +199,205 @@ app.delete('/api/users/:id', authenticate, requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('Error deleting user:', error);
     res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
+// GET full user profile (admin only)
+app.get('/api/users/:id/profile', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Get user details
+    const userResult = await pool.query(
+      'SELECT id, email, name, user_type, is_instructor, address, phone, birth_date, emergency_contact_name, emergency_contact_phone, emergency_contact_relationship, created_at FROM users WHERE id = $1',
+      [userId]
+    );
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    const u = userResult.rows[0];
+
+    // Get class history
+    const classesResult = await pool.query(
+      `SELECT c.title, c.series, c.instructor, c.price, c.sessions, es.enrolled_at
+       FROM enrolled_students es
+       JOIN classes c ON c.id = es.class_id
+       WHERE es.user_id = $1
+       ORDER BY es.enrolled_at DESC`,
+      [userId]
+    );
+
+    // Get certifications
+    const certsResult = await pool.query(
+      `SELECT cert.id, cert.shop_area, cert.certified_at, u.name AS certified_by_name
+       FROM certifications cert
+       LEFT JOIN users u ON u.id = cert.certified_by
+       WHERE cert.user_id = $1
+       ORDER BY cert.certified_at DESC`,
+      [userId]
+    );
+
+    // Get purchases
+    const purchasesResult = await pool.query(
+      `SELECT p.id, p.description, p.amount, p.type, p.status, p.due_date, p.paid_at, p.created_at, u.name AS created_by_name
+       FROM purchases p
+       LEFT JOIN users u ON u.id = p.created_by
+       WHERE p.user_id = $1
+       ORDER BY p.created_at DESC`,
+      [userId]
+    );
+
+    res.json({
+      user: {
+        id: u.id.toString(),
+        email: u.email,
+        name: u.name,
+        userType: u.user_type,
+        isInstructor: u.is_instructor || false,
+        address: u.address,
+        phone: u.phone,
+        birthDate: u.birth_date,
+        emergencyContactName: u.emergency_contact_name,
+        emergencyContactPhone: u.emergency_contact_phone,
+        emergencyContactRelationship: u.emergency_contact_relationship,
+        createdAt: u.created_at
+      },
+      classes: classesResult.rows.map(r => ({
+        title: r.title,
+        series: r.series,
+        instructor: r.instructor,
+        price: r.price != null ? parseFloat(r.price) : null,
+        sessions: r.sessions,
+        enrolledAt: r.enrolled_at
+      })),
+      certifications: certsResult.rows.map(r => ({
+        id: r.id.toString(),
+        shopArea: r.shop_area,
+        certifiedAt: r.certified_at,
+        certifiedByName: r.certified_by_name
+      })),
+      purchases: purchasesResult.rows.map(r => ({
+        id: r.id.toString(),
+        description: r.description,
+        amount: parseFloat(r.amount),
+        type: r.type,
+        status: r.status,
+        dueDate: r.due_date,
+        paidAt: r.paid_at,
+        createdAt: r.created_at,
+        createdByName: r.created_by_name
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({ error: 'Failed to fetch user profile' });
+  }
+});
+
+// POST add certification (admin only)
+app.post('/api/users/:id/certifications', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { shopArea } = req.body;
+    if (!shopArea) {
+      return res.status(400).json({ error: 'Shop area is required' });
+    }
+    const result = await pool.query(
+      'INSERT INTO certifications (user_id, shop_area, certified_by) VALUES ($1, $2, $3) RETURNING *',
+      [req.params.id, shopArea, req.user.id]
+    );
+    const row = result.rows[0];
+    res.status(201).json({
+      id: row.id.toString(),
+      shopArea: row.shop_area,
+      certifiedAt: row.certified_at,
+      certifiedByName: req.user.name
+    });
+  } catch (error) {
+    if (error.code === '23505') {
+      return res.status(400).json({ error: 'User already has this certification' });
+    }
+    console.error('Error adding certification:', error);
+    res.status(500).json({ error: 'Failed to add certification' });
+  }
+});
+
+// DELETE remove certification (admin only)
+app.delete('/api/users/:id/certifications/:certId', authenticate, requireAdmin, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM certifications WHERE id = $1 AND user_id = $2', [req.params.certId, req.params.id]);
+    res.json({ message: 'Certification removed' });
+  } catch (error) {
+    console.error('Error removing certification:', error);
+    res.status(500).json({ error: 'Failed to remove certification' });
+  }
+});
+
+// POST create purchase/invoice (admin only)
+app.post('/api/users/:id/purchases', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { description, amount, type, dueDate } = req.body;
+    if (!description || amount == null || !type) {
+      return res.status(400).json({ error: 'Description, amount, and type are required' });
+    }
+    const status = type === 'purchase' ? 'paid' : 'unpaid';
+    const paidAt = type === 'purchase' ? new Date() : null;
+    const result = await pool.query(
+      'INSERT INTO purchases (user_id, description, amount, type, status, due_date, paid_at, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [req.params.id, description, amount, type, status, dueDate || null, paidAt, req.user.id]
+    );
+    const row = result.rows[0];
+    res.status(201).json({
+      id: row.id.toString(),
+      description: row.description,
+      amount: parseFloat(row.amount),
+      type: row.type,
+      status: row.status,
+      dueDate: row.due_date,
+      paidAt: row.paid_at,
+      createdAt: row.created_at,
+      createdByName: req.user.name
+    });
+  } catch (error) {
+    console.error('Error creating purchase:', error);
+    res.status(500).json({ error: 'Failed to create purchase' });
+  }
+});
+
+// PATCH mark purchase as paid (admin only)
+app.patch('/api/users/:id/purchases/:purchaseId', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'UPDATE purchases SET status = $1, paid_at = $2 WHERE id = $3 AND user_id = $4 RETURNING *',
+      ['paid', new Date(), req.params.purchaseId, req.params.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Purchase not found' });
+    }
+    const row = result.rows[0];
+    res.json({
+      id: row.id.toString(),
+      description: row.description,
+      amount: parseFloat(row.amount),
+      type: row.type,
+      status: row.status,
+      dueDate: row.due_date,
+      paidAt: row.paid_at,
+      createdAt: row.created_at
+    });
+  } catch (error) {
+    console.error('Error updating purchase:', error);
+    res.status(500).json({ error: 'Failed to update purchase' });
+  }
+});
+
+// DELETE purchase (admin only)
+app.delete('/api/users/:id/purchases/:purchaseId', authenticate, requireAdmin, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM purchases WHERE id = $1 AND user_id = $2', [req.params.purchaseId, req.params.id]);
+    res.json({ message: 'Purchase deleted' });
+  } catch (error) {
+    console.error('Error deleting purchase:', error);
+    res.status(500).json({ error: 'Failed to delete purchase' });
   }
 });
 
@@ -373,7 +596,7 @@ app.post('/api/classes/:id/enroll', authenticate, async (req, res) => {
 // REGISTER new user
 app.post('/api/auth/register', loginLimiter, async (req, res) => {
   try {
-    const { email, password, name, userType } = req.body;
+    const { email, password, name, userType, address, phone, birthDate, emergencyContactName, emergencyContactPhone, emergencyContactRelationship } = req.body;
 
     // Validate input
     if (!email || !password || !name || !userType) {
@@ -391,8 +614,9 @@ app.post('/api/auth/register', loginLimiter, async (req, res) => {
 
     // Create new user
     const result = await pool.query(
-      'INSERT INTO users (email, password, name, user_type) VALUES ($1, $2, $3, $4) RETURNING id, email, name, user_type',
-      [email, hashedPassword, name, userType]
+      `INSERT INTO users (email, password, name, user_type, address, phone, birth_date, emergency_contact_name, emergency_contact_phone, emergency_contact_relationship)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, email, name, user_type`,
+      [email, hashedPassword, name, userType, address || null, phone || null, birthDate || null, emergencyContactName || null, emergencyContactPhone || null, emergencyContactRelationship || null]
     );
     const user = result.rows[0];
 

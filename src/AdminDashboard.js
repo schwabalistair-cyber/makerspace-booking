@@ -4,6 +4,7 @@ import BookingCalendar from './BookingCalendar';
 import WeeklyCalendar from './WeeklyCalendar';
 import BookingPopup from './BookingPopup';
 import ClassesManager from './ClassesManager';
+import UserProfilePopup from './UserProfilePopup';
 
 function AdminDashboard({ user, onBack }) {
   const [activeTab, setActiveTab] = useState('bookings');
@@ -11,6 +12,7 @@ function AdminDashboard({ user, onBack }) {
   const [users, setUsers] = useState([]);
   const [bookingForUser, setBookingForUser] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [selectedUserProfile, setSelectedUserProfile] = useState(null);
 
   useEffect(() => {
     fetchBookings();
@@ -110,6 +112,35 @@ function AdminDashboard({ user, onBack }) {
       }
     } catch (error) {
       console.error('Error updating instructor status:', error);
+    }
+  };
+
+  const handleUserClick = async (userId) => {
+    try {
+      const response = await fetch(`/api/users/${userId}/profile`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedUserProfile(data);
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
+
+  const handleProfileUpdate = async () => {
+    if (!selectedUserProfile) return;
+    try {
+      const response = await fetch(`/api/users/${selectedUserProfile.user.id}/profile`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedUserProfile(data);
+      }
+    } catch (error) {
+      console.error('Error refreshing profile:', error);
     }
   };
 
@@ -254,13 +285,14 @@ function AdminDashboard({ user, onBack }) {
                 <span>Actions</span>
               </div>
               {users.map((u) => (
-                <div key={u.id} className="table-row">
+                <div key={u.id} className="table-row clickable-row" onClick={() => handleUserClick(u.id)}>
                   <span>{u.name}</span>
                   <span>{u.email}</span>
                   <span>
                     <select
                       value={u.userType}
                       onChange={(e) => handleChangeUserType(u.id, e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
                       className="type-select"
                     >
                       <option value="member">Member</option>
@@ -275,6 +307,7 @@ function AdminDashboard({ user, onBack }) {
                       type="checkbox"
                       checked={u.isInstructor || false}
                       onChange={(e) => handleToggleInstructor(u.id, e.target.checked)}
+                      onClick={(e) => e.stopPropagation()}
                       className="instructor-checkbox"
                     />
                   </span>
@@ -282,7 +315,7 @@ function AdminDashboard({ user, onBack }) {
                   <span>
                     <button
                       className="delete-btn small"
-                      onClick={() => handleDeleteUser(u.id)}
+                      onClick={(e) => { e.stopPropagation(); handleDeleteUser(u.id); }}
                     >
                       Delete
                     </button>
@@ -383,6 +416,14 @@ function AdminDashboard({ user, onBack }) {
           </div>
         )}
       </div>
+
+      {selectedUserProfile && (
+        <UserProfilePopup
+          profile={selectedUserProfile}
+          onClose={() => setSelectedUserProfile(null)}
+          onProfileUpdate={handleProfileUpdate}
+        />
+      )}
     </div>
   );
 }

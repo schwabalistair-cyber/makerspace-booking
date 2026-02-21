@@ -224,6 +224,14 @@
   background-color: #f8f9fa;
 }
 
+.clickable-row {
+  cursor: pointer;
+}
+
+.clickable-row:hover {
+  background-color: #e8f4fd;
+}
+
 .type-select {
   padding: 5px 8px;
   border: 1px solid #ddd;

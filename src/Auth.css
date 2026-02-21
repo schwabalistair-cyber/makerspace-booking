@@ -89,6 +89,14 @@
   text-decoration: underline;
 }
 
+.form-section-header {
+  color: #2c3e50;
+  font-size: 16px;
+  margin: 10px 0;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
 .error-message {
   background-color: #fee;
   border: 1px solid #fcc;

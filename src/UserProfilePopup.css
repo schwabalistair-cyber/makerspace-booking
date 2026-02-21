@@ -1,0 +1,216 @@
+.user-profile-popup {
+  max-width: 650px;
+  width: 95%;
+}
+
+.profile-tabs {
+  display: flex;
+  border-bottom: 2px solid #eee;
+  padding: 0 20px;
+  background: #f9f9f9;
+}
+
+.profile-tab {
+  padding: 12px 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #888;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  width: auto;
+  transition: color 0.2s;
+}
+
+.profile-tab:hover {
+  color: #2c3e50;
+}
+
+.profile-tab.active {
+  color: #3498db;
+  border-bottom-color: #3498db;
+}
+
+.profile-body {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.profile-list-item {
+  padding: 12px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.list-item-title {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 4px;
+}
+
+.list-item-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 13px;
+  color: #666;
+}
+
+.empty-message {
+  color: #999;
+  font-style: italic;
+}
+
+/* Certification styles */
+.cert-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cert-badge {
+  background: #d4edda;
+  color: #155724;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.cert-detail {
+  font-size: 12px;
+  color: #888;
+  margin-left: 8px;
+}
+
+.add-cert-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.add-cert-row select {
+  flex: 1;
+  padding: 8px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+/* Purchase styles */
+.purchase-item {
+  flex-wrap: wrap;
+}
+
+.purchase-amount {
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.type-label {
+  text-transform: capitalize;
+}
+
+.status-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge.paid {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.unpaid {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.purchase-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.purchase-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.purchase-form label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 13px;
+}
+
+.purchase-form input,
+.purchase-form select {
+  width: 100%;
+  padding: 8px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+/* Buttons */
+.add-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  width: auto;
+}
+
+.add-btn:hover {
+  background: #2980b9;
+}
+
+.add-btn:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+}
+
+.remove-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  width: auto;
+}
+
+.remove-btn:hover {
+  background: #c0392b;
+}
+
+.paid-btn {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  width: auto;
+}
+
+.paid-btn:hover {
+  background: #219a52;
+}

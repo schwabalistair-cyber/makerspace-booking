@@ -80,6 +80,42 @@ async function initDb() {
       UNIQUE(class_id, enrolled_student_id, session_date)
     )
   `);
+
+  // Add profile fields to users
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT`);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT`);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS birth_date TEXT`);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS emergency_contact_name TEXT`);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS emergency_contact_phone TEXT`);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS emergency_contact_relationship TEXT`);
+
+  // Create certifications table
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS certifications (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      shop_area TEXT NOT NULL,
+      certified_at TIMESTAMPTZ DEFAULT NOW(),
+      certified_by INTEGER REFERENCES users(id),
+      UNIQUE(user_id, shop_area)
+    )
+  `);
+
+  // Create purchases table
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS purchases (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      description TEXT NOT NULL,
+      amount NUMERIC NOT NULL,
+      type TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'unpaid',
+      due_date TEXT,
+      paid_at TIMESTAMPTZ,
+      created_by INTEGER REFERENCES users(id),
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
 }
 
 module.exports = { pool, initDb };
