@@ -57,7 +57,9 @@ function BookingCalendar({ onSelectSlot, user }) {
 
   const fetchBookings = async () => {
     try {
-      const response = await fetch('/api/bookings');
+      const response = await fetch('/api/bookings', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
       if (response.ok) {
         const data = await response.json();
         setBookings(data);

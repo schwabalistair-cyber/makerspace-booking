@@ -19,7 +19,9 @@ function AdminDashboard({ user, onBack }) {
 
   const fetchBookings = async () => {
     try {
-      const response = await fetch('/api/bookings');
+      const response = await fetch('/api/bookings', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
       if (response.ok) {
         const data = await response.json();
         setBookings(data);
@@ -31,7 +33,9 @@ function AdminDashboard({ user, onBack }) {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('/api/users');
+      const response = await fetch('/api/users', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
       if (response.ok) {
         const data = await response.json();
         setUsers(data);
@@ -46,7 +50,8 @@ function AdminDashboard({ user, onBack }) {
 
     try {
       const response = await fetch(`/api/bookings/${bookingId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
       if (response.ok) {
         setBookings(bookings.filter(b => b.id !== bookingId));
@@ -61,7 +66,8 @@ function AdminDashboard({ user, onBack }) {
 
     try {
       const response = await fetch(`/api/users/${userId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
       if (response.ok) {
         setUsers(users.filter(u => u.id !== userId));
@@ -75,7 +81,10 @@ function AdminDashboard({ user, onBack }) {
     try {
       const response = await fetch(`/api/users/${userId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
         body: JSON.stringify({ userType: newType })
       });
       if (response.ok) {
@@ -109,7 +118,10 @@ function AdminDashboard({ user, onBack }) {
     try {
       const response = await fetch('/api/bookings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
         body: JSON.stringify(bookingData)
       });
       if (response.ok) {
