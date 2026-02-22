@@ -61,7 +61,7 @@ function Auth({ onLogin }) {
   return (
     <div className="auth-container">
       <div className="auth-box">
-        <h1>Makerspace Booking System</h1>
+        <img src="/diycave-logo.svg" alt="DIY Cave" className="header-logo" />
         <h2>{isLogin ? 'Login' : 'Sign Up'}</h2>
 
         {error && <div className="error-message">{error}</div>}

@@ -18,9 +18,8 @@
   font-size: 28px;
 }
 
-.admin-header-left span {
-  font-size: 14px;
-  opacity: 0.8;
+.admin-header-left .header-logo {
+  height: 50px;
 }
 
 .back-button {

@@ -111,8 +111,11 @@ function App() {
 
   // Header component used in all views
   const Header = () => (
-    <header>
-      <h1>Makerspace Booking System</h1>
+    <div className="header-wrapper">
+      <div className="logo-bar">
+        <img src="/diycave-logo.svg" alt="DIY Cave" className="header-logo" />
+      </div>
+      <header>
       <div className="user-info">
         {user && user.isInstructor && (
           <button className="instructor-btn" onClick={() => setShowInstructor(true)}>
@@ -132,6 +135,7 @@ function App() {
         )}
       </div>
     </header>
+    </div>
   );
 
   // If not logged in show auth screen

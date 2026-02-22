@@ -206,7 +206,7 @@ function AdminDashboard({ user, onBack }) {
       <div className="admin-header">
         <div className="admin-header-left">
           <h1>Admin Dashboard</h1>
-          <span>Makerspace Booking System</span>
+          <img src="/diycave-logo.svg" alt="DIY Cave" className="header-logo" />
         </div>
         <button className="back-button" onClick={onBack}>
           ← Back to Booking
