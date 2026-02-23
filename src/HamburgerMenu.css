@@ -99,12 +99,12 @@
 }
 
 .drawer-nav-item--admin {
-  color: #8e44ad;
+  color: #0f766e;
   font-weight: 600;
 }
 
 .drawer-nav-item--admin:hover {
-  background: #f9f3fd;
+  background: #f0fdf9;
 }
 
 .drawer-nav-arrow {

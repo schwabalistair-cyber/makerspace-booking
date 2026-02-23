@@ -169,7 +169,7 @@ function HamburgerMenu({ user, onClose, onLogout, onAdminDashboard }) {
           <span className="drawer-title">
             {activeView
               ? (selectedBooking ? 'Booking Details' : viewTitles[activeView])
-              : user.name}
+              : `Welcome, ${user.name}`}
           </span>
         </div>
 
