@@ -166,7 +166,7 @@ app.get('/api/users/instructors', authenticate, async (req, res) => {
 // UPDATE user type and/or instructor flag
 app.patch('/api/users/:id', authenticate, requireAdmin, async (req, res) => {
   try {
-    const { userType, isInstructor, address, phone, birthDate, emergencyContactName, emergencyContactPhone, emergencyContactRelationship } = req.body;
+    const { userType, isInstructor, address, streetAddress, state, zipCode, phone, birthDate, emergencyContactName, emergencyContactPhone, emergencyContactRelationship } = req.body;
 
     // Build dynamic update
     const updates = [];
@@ -184,6 +184,18 @@ app.patch('/api/users/:id', authenticate, requireAdmin, async (req, res) => {
     if (address !== undefined) {
       updates.push(`address = $${paramIndex++}`);
       values.push(address);
+    }
+    if (streetAddress !== undefined) {
+      updates.push(`street_address = $${paramIndex++}`);
+      values.push(streetAddress);
+    }
+    if (state !== undefined) {
+      updates.push(`state = $${paramIndex++}`);
+      values.push(state);
+    }
+    if (zipCode !== undefined) {
+      updates.push(`zip_code = $${paramIndex++}`);
+      values.push(zipCode);
     }
     if (phone !== undefined) {
       updates.push(`phone = $${paramIndex++}`);
@@ -251,7 +263,7 @@ app.get('/api/users/:id/profile', authenticate, requireAdmin, async (req, res) =
 
     // Get user details
     const userResult = await pool.query(
-      'SELECT id, email, name, user_type, is_instructor, address, phone, birth_date, emergency_contact_name, emergency_contact_phone, emergency_contact_relationship, created_at FROM users WHERE id = $1',
+      'SELECT id, email, name, user_type, is_instructor, address, street_address, state, zip_code, phone, birth_date, emergency_contact_name, emergency_contact_phone, emergency_contact_relationship, created_at FROM users WHERE id = $1',
       [userId]
     );
     if (userResult.rows.length === 0) {
@@ -297,6 +309,9 @@ app.get('/api/users/:id/profile', authenticate, requireAdmin, async (req, res) =
         userType: u.user_type,
         isInstructor: u.is_instructor || false,
         address: u.address,
+        streetAddress: u.street_address,
+        state: u.state,
+        zipCode: u.zip_code,
         phone: u.phone,
         birthDate: u.birth_date,
         emergencyContactName: u.emergency_contact_name,

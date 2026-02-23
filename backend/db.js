@@ -83,6 +83,9 @@ async function initDb() {
 
   // Add profile fields to users
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT`);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS street_address TEXT`);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS state TEXT`);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS zip_code TEXT`);
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT`);
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS birth_date TEXT`);
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS emergency_contact_name TEXT`);

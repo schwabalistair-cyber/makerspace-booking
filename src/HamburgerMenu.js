@@ -7,14 +7,31 @@ const TIME_SLOTS = [
   '4pm - 5pm', '5pm - 6pm', '6pm - 7pm', '7pm - 8pm', '8pm - 9pm'
 ];
 
+const formatDate = (dateStr) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+};
+
+const formatTime = (timeStr) => {
+  if (!timeStr) return '';
+  const [h, m] = timeStr.split(':');
+  const hour = parseInt(h);
+  const ampm = hour >= 12 ? 'pm' : 'am';
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}:${m} ${ampm}`;
+};
+
 function HamburgerMenu({ user, onClose, onLogout, onAdminDashboard }) {
   const [activeView, setActiveView] = useState(null);
   const [bookings, setBookings] = useState([]);
+  const [classes, setClasses] = useState([]);
   const [certs, setCerts] = useState([]);
   const [purchases, setPurchases] = useState([]);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // Booking detail state
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [modifying, setModifying] = useState(false);
   const [modifyDate, setModifyDate] = useState('');
@@ -22,8 +39,26 @@ function HamburgerMenu({ user, onClose, onLogout, onAdminDashboard }) {
   const [actionError, setActionError] = useState('');
   const [confirmCancel, setConfirmCancel] = useState(false);
 
+  // Class detail state
+  const [selectedClass, setSelectedClass] = useState(null);
+  const [enrollError, setEnrollError] = useState('');
+  const [enrollSuccess, setEnrollSuccess] = useState(false);
+
+  // Address edit state
+  const [editingAddress, setEditingAddress] = useState(false);
+  const [addressForm, setAddressForm] = useState({ streetAddress: '', state: '', zipCode: '' });
+  const [addressError, setAddressError] = useState('');
+  const [addressSaving, setAddressSaving] = useState(false);
+
+  // Emergency contact edit state
+  const [editingEmergency, setEditingEmergency] = useState(false);
+  const [emergencyForm, setEmergencyForm] = useState({ emergencyContactName: '', emergencyContactPhone: '', emergencyContactRelationship: '' });
+  const [emergencyError, setEmergencyError] = useState('');
+  const [emergencySaving, setEmergencySaving] = useState(false);
+
   const viewTitles = {
     bookings: 'Bookings',
+    classes: 'Classes',
     certifications: 'Certifications',
     billing: 'Billing',
     info: 'My Info',
@@ -47,6 +82,27 @@ function HamburgerMenu({ user, onClose, onLogout, onAdminDashboard }) {
         setBookings(userBookings.sort((a, b) => new Date(b.date) - new Date(a.date)));
       } catch (e) {
         setBookings([]);
+      }
+      setLoading(false);
+    }
+
+    if (view === 'classes' && classes.length === 0) {
+      setLoading(true);
+      try {
+        const res = await fetch('/api/classes', { headers });
+        const data = await res.json();
+        const upcoming = Array.isArray(data)
+          ? data
+              .filter(c => c.sessions?.some(s => s.date >= today))
+              .sort((a, b) => {
+                const aDate = a.sessions?.[0]?.date || '';
+                const bDate = b.sessions?.[0]?.date || '';
+                return aDate.localeCompare(bDate);
+              })
+          : [];
+        setClasses(upcoming);
+      } catch (e) {
+        setClasses([]);
       }
       setLoading(false);
     }
@@ -88,6 +144,7 @@ function HamburgerMenu({ user, onClose, onLogout, onAdminDashboard }) {
     }
   };
 
+  // Booking detail handlers
   const handleSelectBooking = (b) => {
     setSelectedBooking(b);
     setModifying(false);
@@ -147,10 +204,106 @@ function HamburgerMenu({ user, onClose, onLogout, onAdminDashboard }) {
     }
   };
 
+  // Class detail handlers
+  const handleSelectClass = (c) => {
+    setSelectedClass(c);
+    setEnrollError('');
+    setEnrollSuccess(false);
+  };
+
+  const handleBackFromClassDetail = () => {
+    setSelectedClass(null);
+    setEnrollError('');
+    setEnrollSuccess(false);
+  };
+
+  const handleEnroll = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`/api/classes/${selectedClass.id}/enroll`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, userName: user.name, userEmail: user.email })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setEnrollError(data.error || 'Failed to enroll');
+        return;
+      }
+      setClasses(prev => prev.map(c => c.id === selectedClass.id ? data : c));
+      setSelectedClass(data);
+      setEnrollSuccess(true);
+      setEnrollError('');
+    } catch (e) {
+      setEnrollError('Failed to enroll');
+    }
+  };
+
+  const handleSaveAddress = async () => {
+    setAddressSaving(true);
+    setAddressError('');
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`/api/users/${user.id}`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(addressForm)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAddressError(data.error || 'Failed to save address');
+        setAddressSaving(false);
+        return;
+      }
+      setUserData(prev => ({ ...prev, ...addressForm }));
+      setEditingAddress(false);
+    } catch (e) {
+      setAddressError('Failed to save address');
+    }
+    setAddressSaving(false);
+  };
+
+  const handleSaveEmergencyContact = async () => {
+    setEmergencySaving(true);
+    setEmergencyError('');
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`/api/users/${user.id}`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(emergencyForm)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setEmergencyError(data.error || 'Failed to save');
+        setEmergencySaving(false);
+        return;
+      }
+      setUserData(prev => ({ ...prev, ...emergencyForm }));
+      setEditingEmergency(false);
+    } catch (e) {
+      setEmergencyError('Failed to save');
+    }
+    setEmergencySaving(false);
+  };
+
   const upcomingBookings = bookings.filter(b => b.date >= today);
   const pastBookings = bookings.filter(b => b.date < today);
 
   const isUpcoming = selectedBooking && selectedBooking.date >= today;
+
+  const headerTitle = () => {
+    if (!activeView) return `Welcome, ${user.name}`;
+    if (selectedBooking) return 'Booking Details';
+    if (selectedClass) return 'Class Details';
+    return viewTitles[activeView];
+  };
+
+  const handleBack = () => {
+    if (selectedBooking) handleBackFromDetail();
+    else if (selectedClass) handleBackFromClassDetail();
+    else setActiveView(null);
+  };
 
   return (
     <>
@@ -159,18 +312,11 @@ function HamburgerMenu({ user, onClose, onLogout, onAdminDashboard }) {
 
         <div className="drawer-header">
           {activeView ? (
-            <button
-              className="drawer-back-btn"
-              onClick={selectedBooking ? handleBackFromDetail : () => setActiveView(null)}
-            >&#8592;</button>
+            <button className="drawer-back-btn" onClick={handleBack}>&#8592;</button>
           ) : (
             <button className="drawer-close-btn" onClick={onClose}>&times;</button>
           )}
-          <span className="drawer-title">
-            {activeView
-              ? (selectedBooking ? 'Booking Details' : viewTitles[activeView])
-              : `Welcome, ${user.name}`}
-          </span>
+          <span className="drawer-title">{headerTitle()}</span>
         </div>
 
         <div className="drawer-body">
@@ -185,7 +331,7 @@ function HamburgerMenu({ user, onClose, onLogout, onAdminDashboard }) {
                     <span className="drawer-nav-arrow">&#8250;</span>
                   </button>
                 )}
-                {['bookings', 'certifications', 'billing', 'info'].map(v => (
+                {['bookings', 'classes', 'certifications', 'billing', 'info'].map(v => (
                   <button key={v} className="drawer-nav-item" onClick={() => handleViewChange(v)}>
                     {viewTitles[v]}
                     <span className="drawer-nav-arrow">&#8250;</span>
@@ -198,6 +344,7 @@ function HamburgerMenu({ user, onClose, onLogout, onAdminDashboard }) {
             </>
           )}
 
+          {/* Bookings list */}
           {!loading && activeView === 'bookings' && !selectedBooking && (
             <div className="drawer-view">
               <div className="drawer-section-title">Upcoming</div>
@@ -224,6 +371,7 @@ function HamburgerMenu({ user, onClose, onLogout, onAdminDashboard }) {
             </div>
           )}
 
+          {/* Booking detail */}
           {!loading && activeView === 'bookings' && selectedBooking && (
             <div className="drawer-view">
               <div className="drawer-detail-field">
@@ -322,6 +470,105 @@ function HamburgerMenu({ user, onClose, onLogout, onAdminDashboard }) {
             </div>
           )}
 
+          {/* Classes list */}
+          {!loading && activeView === 'classes' && !selectedClass && (
+            <div className="drawer-view">
+              {classes.length === 0 && (
+                <p className="drawer-empty">No upcoming classes available.</p>
+              )}
+              {classes.map((c, i) => {
+                const spotsLeft = c.maxCapacity - (c.enrolledStudents?.length || 0);
+                const nextSession = c.sessions?.[0];
+                return (
+                  <div key={i} className="drawer-booking-item" onClick={() => handleSelectClass(c)}>
+                    <div className="drawer-class-item-header">
+                      <div className="drawer-item-main">{c.title}</div>
+                      {c.series && <span className="drawer-class-series">{c.series}</span>}
+                    </div>
+                    <div className="drawer-item-detail">
+                      {nextSession && `${formatDate(nextSession.date)}`}
+                      {c.price != null && ` · $${c.price}`}
+                    </div>
+                    <div className="drawer-item-detail">
+                      {c.instructor} · {spotsLeft > 0 ? `${spotsLeft} spot${spotsLeft !== 1 ? 's' : ''} left` : 'Full'}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Class detail */}
+          {!loading && activeView === 'classes' && selectedClass && (
+            <div className="drawer-view">
+              {selectedClass.series && (
+                <span className="drawer-class-series-tag">{selectedClass.series}</span>
+              )}
+              <div className="drawer-detail-field">
+                <div className="drawer-info-label">Class</div>
+                <div className="drawer-info-value">{selectedClass.title}</div>
+              </div>
+              <div className="drawer-detail-field">
+                <div className="drawer-info-label">Instructor</div>
+                <div className="drawer-info-value">{selectedClass.instructor}</div>
+              </div>
+              <div className="drawer-detail-field">
+                <div className="drawer-info-label">{selectedClass.sessions?.length > 1 ? 'Sessions' : 'Session'}</div>
+                <div className="drawer-info-value">
+                  {selectedClass.sessions?.map((s, i) => (
+                    <div key={i}>{formatDate(s.date)} at {formatTime(s.time)}</div>
+                  ))}
+                </div>
+              </div>
+              <div className="drawer-detail-field">
+                <div className="drawer-info-label">Duration</div>
+                <div className="drawer-info-value">{selectedClass.duration}</div>
+              </div>
+              <div className="drawer-detail-field">
+                <div className="drawer-info-label">Price</div>
+                <div className="drawer-info-value">${selectedClass.price}</div>
+              </div>
+              <div className="drawer-detail-field">
+                <div className="drawer-info-label">Availability</div>
+                <div className="drawer-info-value">
+                  {selectedClass.enrolledStudents?.length || 0} / {selectedClass.maxCapacity} enrolled
+                </div>
+              </div>
+              {selectedClass.description && (
+                <div className="drawer-detail-field">
+                  <div className="drawer-info-label">Description</div>
+                  <div className="drawer-info-value">{selectedClass.description}</div>
+                </div>
+              )}
+              {selectedClass.prerequisites && (
+                <div className="drawer-detail-field">
+                  <div className="drawer-info-label">Prerequisites</div>
+                  <div className="drawer-info-value">{selectedClass.prerequisites}</div>
+                </div>
+              )}
+
+              <div className="drawer-enroll-section">
+                {enrollSuccess && (
+                  <div className="drawer-enroll-success">You're enrolled in this class!</div>
+                )}
+                {enrollError && <div className="drawer-error">{enrollError}</div>}
+                {!enrollSuccess && (() => {
+                  const isEnrolled = selectedClass.enrolledStudents?.some(
+                    s => s.userId === user.id || s.userEmail === user.email
+                  );
+                  const isFull = (selectedClass.enrolledStudents?.length || 0) >= selectedClass.maxCapacity;
+                  if (isEnrolled) return <div className="drawer-enrolled-badge">You're enrolled</div>;
+                  if (isFull) return <div className="drawer-full-badge">Class is full</div>;
+                  return (
+                    <button className="drawer-action-btn" onClick={handleEnroll}>
+                      Enroll in Class
+                    </button>
+                  );
+                })()}
+              </div>
+            </div>
+          )}
+
           {!loading && activeView === 'certifications' && (
             <div className="drawer-view">
               {certs.length === 0 && (
@@ -388,47 +635,170 @@ function HamburgerMenu({ user, onClose, onLogout, onAdminDashboard }) {
 
           {!loading && activeView === 'info' && (
             <div className="drawer-view">
-              <div className="drawer-section-title">Personal</div>
-              <div className="drawer-info-label">Name</div>
-              <div className="drawer-info-value">{userData?.name || user.name}</div>
-              <div className="drawer-info-label">Email</div>
-              <div className="drawer-info-value">{userData?.email || user.email}</div>
-              <div className="drawer-info-label">Member Type</div>
-              <div className="drawer-info-value">{userData?.userType || user.userType}</div>
-              {(userData?.phone) && (
-                <>
-                  <div className="drawer-info-label">Phone</div>
-                  <div className="drawer-info-value">{userData.phone}</div>
-                </>
-              )}
-              {(userData?.address) && (
-                <>
-                  <div className="drawer-info-label">Address</div>
-                  <div className="drawer-info-value">{userData.address}</div>
-                </>
-              )}
-              {(userData?.birthDate) && (
-                <>
-                  <div className="drawer-info-label">Date of Birth</div>
-                  <div className="drawer-info-value">{userData.birthDate}</div>
-                </>
-              )}
 
-              {(userData?.emergencyContactName) && (
-                <>
-                  <div className="drawer-section-title">Emergency Contact</div>
-                  <div className="drawer-info-label">Name</div>
-                  <div className="drawer-info-value">{userData.emergencyContactName}</div>
-                  <div className="drawer-info-label">Phone</div>
-                  <div className="drawer-info-value">{userData.emergencyContactPhone}</div>
-                  {userData.emergencyContactRelationship && (
-                    <>
-                      <div className="drawer-info-label">Relationship</div>
-                      <div className="drawer-info-value">{userData.emergencyContactRelationship}</div>
-                    </>
+              {/* Personal Info card */}
+              <div className="drawer-info-card">
+                <div className="drawer-section-title">Personal Info</div>
+                <div className="drawer-info-label">Name</div>
+                <div className="drawer-info-value">{userData?.name || user.name}</div>
+                <div className="drawer-info-label">Email</div>
+                <div className="drawer-info-value">{userData?.email || user.email}</div>
+                <div className="drawer-info-label">Member Type</div>
+                <div className="drawer-info-value">{userData?.userType || user.userType}</div>
+                {userData?.phone && (
+                  <>
+                    <div className="drawer-info-label">Phone</div>
+                    <div className="drawer-info-value">{userData.phone}</div>
+                  </>
+                )}
+                {userData?.birthDate && (
+                  <>
+                    <div className="drawer-info-label">Date of Birth</div>
+                    <div className="drawer-info-value">{userData.birthDate}</div>
+                  </>
+                )}
+              </div>
+
+              {/* My Address card */}
+              <div className="drawer-info-card">
+                <div className="drawer-section-title-row">
+                  <span className="drawer-section-title">My Address</span>
+                  {!editingAddress && (
+                    <button
+                      className="drawer-edit-btn"
+                      onClick={() => {
+                        setAddressForm({
+                          streetAddress: userData?.streetAddress || '',
+                          state: userData?.state || '',
+                          zipCode: userData?.zipCode || ''
+                        });
+                        setAddressError('');
+                        setEditingAddress(true);
+                      }}
+                    >
+                      Edit
+                    </button>
                   )}
-                </>
-              )}
+                </div>
+
+                {!editingAddress ? (
+                  <>
+                    <div className="drawer-info-label">Street</div>
+                    <div className="drawer-info-value">{userData?.streetAddress || '—'}</div>
+                    <div className="drawer-info-label">State</div>
+                    <div className="drawer-info-value">{userData?.state || '—'}</div>
+                    <div className="drawer-info-label">Zip Code</div>
+                    <div className="drawer-info-value">{userData?.zipCode || '—'}</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="drawer-info-label">Street</div>
+                    <input
+                      className="drawer-modify-input"
+                      type="text"
+                      placeholder="123 Main St"
+                      value={addressForm.streetAddress}
+                      onChange={e => setAddressForm(f => ({ ...f, streetAddress: e.target.value }))}
+                    />
+                    <div className="drawer-info-label">State</div>
+                    <input
+                      className="drawer-modify-input"
+                      type="text"
+                      placeholder="e.g. CA"
+                      value={addressForm.state}
+                      onChange={e => setAddressForm(f => ({ ...f, state: e.target.value }))}
+                    />
+                    <div className="drawer-info-label">Zip Code</div>
+                    <input
+                      className="drawer-modify-input"
+                      type="text"
+                      placeholder="e.g. 90210"
+                      value={addressForm.zipCode}
+                      onChange={e => setAddressForm(f => ({ ...f, zipCode: e.target.value }))}
+                    />
+                    {addressError && <div className="drawer-error">{addressError}</div>}
+                    <div className="drawer-modify-actions">
+                      <button className="drawer-action-btn" onClick={handleSaveAddress} disabled={addressSaving}>
+                        {addressSaving ? 'Saving...' : 'Save'}
+                      </button>
+                      <button className="drawer-modify-cancel" onClick={() => { setEditingAddress(false); setAddressError(''); }}>
+                        Cancel
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Emergency Contact card */}
+              <div className="drawer-info-card">
+                <div className="drawer-section-title-row">
+                  <span className="drawer-section-title">Emergency Contact</span>
+                  {!editingEmergency && (
+                    <button
+                      className="drawer-edit-btn"
+                      onClick={() => {
+                        setEmergencyForm({
+                          emergencyContactName: userData?.emergencyContactName || '',
+                          emergencyContactPhone: userData?.emergencyContactPhone || '',
+                          emergencyContactRelationship: userData?.emergencyContactRelationship || ''
+                        });
+                        setEmergencyError('');
+                        setEditingEmergency(true);
+                      }}
+                    >
+                      Edit
+                    </button>
+                  )}
+                </div>
+
+                {!editingEmergency ? (
+                  <>
+                    <div className="drawer-info-label">Name</div>
+                    <div className="drawer-info-value">{userData?.emergencyContactName || '—'}</div>
+                    <div className="drawer-info-label">Phone</div>
+                    <div className="drawer-info-value">{userData?.emergencyContactPhone || '—'}</div>
+                    <div className="drawer-info-label">Relationship</div>
+                    <div className="drawer-info-value">{userData?.emergencyContactRelationship || '—'}</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="drawer-info-label">Name</div>
+                    <input
+                      className="drawer-modify-input"
+                      type="text"
+                      placeholder="Full name"
+                      value={emergencyForm.emergencyContactName}
+                      onChange={e => setEmergencyForm(f => ({ ...f, emergencyContactName: e.target.value }))}
+                    />
+                    <div className="drawer-info-label">Phone</div>
+                    <input
+                      className="drawer-modify-input"
+                      type="text"
+                      placeholder="Phone number"
+                      value={emergencyForm.emergencyContactPhone}
+                      onChange={e => setEmergencyForm(f => ({ ...f, emergencyContactPhone: e.target.value }))}
+                    />
+                    <div className="drawer-info-label">Relationship</div>
+                    <input
+                      className="drawer-modify-input"
+                      type="text"
+                      placeholder="e.g. Spouse, Parent"
+                      value={emergencyForm.emergencyContactRelationship}
+                      onChange={e => setEmergencyForm(f => ({ ...f, emergencyContactRelationship: e.target.value }))}
+                    />
+                    {emergencyError && <div className="drawer-error">{emergencyError}</div>}
+                    <div className="drawer-modify-actions">
+                      <button className="drawer-action-btn" onClick={handleSaveEmergencyContact} disabled={emergencySaving}>
+                        {emergencySaving ? 'Saving...' : 'Save'}
+                      </button>
+                      <button className="drawer-modify-cancel" onClick={() => { setEditingEmergency(false); setEmergencyError(''); }}>
+                        Cancel
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+
             </div>
           )}
         </div>

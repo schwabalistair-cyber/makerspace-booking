@@ -371,6 +371,128 @@
   margin: 6px 0;
 }
 
+/* Class list item header (title + series badge inline) */
+.drawer-class-item-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+/* Series badge on class list items */
+.drawer-class-series {
+  display: inline-block;
+  background: #e8f4fd;
+  color: #1a6fa8;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Series tag in class detail view */
+.drawer-class-series-tag {
+  display: inline-block;
+  background: #e8f4fd;
+  color: #1a6fa8;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+/* Enroll section at bottom of class detail */
+.drawer-enroll-section {
+  margin-top: 20px;
+}
+
+/* Success message after enrolling */
+.drawer-enroll-success {
+  background: #d4edda;
+  color: #155724;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Already enrolled badge */
+.drawer-enrolled-badge {
+  background: #d4edda;
+  color: #155724;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Full class badge */
+.drawer-full-badge {
+  background: #f0f0f0;
+  color: #888;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Info cards — each section gets its own card */
+.drawer-info-card {
+  background: #f8f9fa;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+
+.drawer-info-card .drawer-info-value:last-child {
+  margin-bottom: 0;
+}
+
+/* Section title row with inline edit button */
+.drawer-section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.drawer-info-card .drawer-section-title {
+  margin: 0 0 10px;
+}
+
+.drawer-info-card .drawer-section-title-row .drawer-section-title {
+  margin: 0;
+}
+
+/* Small inline edit button */
+.drawer-edit-btn {
+  background: #2980b9;
+  border: none;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+  display: inline-block;
+  width: fit-content;
+}
+
+.drawer-edit-btn:hover {
+  background: #1f6692;
+}
+
 /* Info fields */
 .drawer-info-label {
   font-size: 12px;
