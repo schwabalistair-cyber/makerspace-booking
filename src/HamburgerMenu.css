@@ -124,7 +124,7 @@
 .drawer-logout-btn {
   width: 100%;
   padding: 12px;
-  background: #e74c3c;
+  background: linear-gradient(135deg, #1a6dbd 0%, #5ab4f0 100%);
   color: white;
   border: none;
   border-radius: 6px;
@@ -133,7 +133,7 @@
 }
 
 .drawer-logout-btn:hover {
-  background: #c0392b;
+  background: linear-gradient(135deg, #155fa8 0%, #48a8e8 100%);
 }
 
 /* Sub-view content */
