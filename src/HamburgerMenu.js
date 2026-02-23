@@ -7,7 +7,7 @@ const TIME_SLOTS = [
   '4pm - 5pm', '5pm - 6pm', '6pm - 7pm', '7pm - 8pm', '8pm - 9pm'
 ];
 
-function HamburgerMenu({ user, onClose, onLogout }) {
+function HamburgerMenu({ user, onClose, onLogout, onAdminDashboard }) {
   const [activeView, setActiveView] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [certs, setCerts] = useState([]);
@@ -179,6 +179,12 @@ function HamburgerMenu({ user, onClose, onLogout }) {
           {!loading && activeView === null && (
             <>
               <nav className="drawer-nav">
+                {user.userType === 'admin' && (
+                  <button className="drawer-nav-item drawer-nav-item--admin" onClick={onAdminDashboard}>
+                    Admin Dashboard
+                    <span className="drawer-nav-arrow">&#8250;</span>
+                  </button>
+                )}
                 {['bookings', 'certifications', 'billing', 'info'].map(v => (
                   <button key={v} className="drawer-nav-item" onClick={() => handleViewChange(v)}>
                     {viewTitles[v]}

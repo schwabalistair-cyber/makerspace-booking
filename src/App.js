@@ -148,6 +148,7 @@ function App() {
             user={user}
             onClose={() => setShowMenu(false)}
             onLogout={() => { handleLogout(); setShowMenu(false); }}
+            onAdminDashboard={() => { setShowAdmin(true); setShowMenu(false); }}
           />
         )}
         <main>

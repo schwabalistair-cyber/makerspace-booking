@@ -98,6 +98,15 @@
   background: #f8f9fa;
 }
 
+.drawer-nav-item--admin {
+  color: #8e44ad;
+  font-weight: 600;
+}
+
+.drawer-nav-item--admin:hover {
+  background: #f9f3fd;
+}
+
 .drawer-nav-arrow {
   color: #bbb;
   font-size: 20px;
