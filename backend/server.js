@@ -73,14 +73,56 @@ app.post('/api/bookings', authenticate, async (req, res) => {
   }
 });
 
-// DELETE a booking
-app.delete('/api/bookings/:id', authenticate, requireAdmin, async (req, res) => {
+// DELETE a booking (admin or booking owner)
+app.delete('/api/bookings/:id', authenticate, async (req, res) => {
   try {
+    const result = await pool.query('SELECT * FROM bookings WHERE id = $1', [req.params.id]);
+    const booking = result.rows[0];
+    if (!booking) return res.status(404).json({ error: 'Booking not found' });
+    if (req.user.userType !== 'admin' && booking.user_id?.toString() !== req.user.id) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
     await pool.query('DELETE FROM bookings WHERE id = $1', [req.params.id]);
-    res.json({ message: 'Booking deleted' });
+    res.json({ message: 'Booking cancelled' });
   } catch (error) {
     console.error('Error deleting booking:', error);
     res.status(500).json({ error: 'Failed to delete booking' });
+  }
+});
+
+// PUT update a booking's date and time slot (admin or booking owner)
+app.put('/api/bookings/:id', authenticate, async (req, res) => {
+  try {
+    const { date, timeSlot } = req.body;
+    const result = await pool.query('SELECT * FROM bookings WHERE id = $1', [req.params.id]);
+    const booking = result.rows[0];
+    if (!booking) return res.status(404).json({ error: 'Booking not found' });
+    if (req.user.userType !== 'admin' && booking.user_id?.toString() !== req.user.id) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const updated = await pool.query(
+      'UPDATE bookings SET date = $1, time_slot = $2 WHERE id = $3 RETURNING *',
+      [date, timeSlot, req.params.id]
+    );
+    const row = updated.rows[0];
+    res.json({
+      id: row.id.toString(),
+      name: row.name,
+      email: row.email,
+      userId: row.user_id != null ? row.user_id.toString() : null,
+      userType: row.user_type,
+      date: row.date,
+      timeSlot: row.time_slot,
+      shopArea: row.shop_area,
+      rateCharged: row.rate_charged != null ? parseFloat(row.rate_charged) : null,
+      rateLabel: row.rate_label,
+      bookedByAdmin: row.booked_by_admin,
+      adminId: row.admin_id != null ? row.admin_id.toString() : null,
+      createdAt: row.created_at
+    });
+  } catch (error) {
+    console.error('Error updating booking:', error);
+    res.status(500).json({ error: 'Failed to update booking' });
   }
 });
 

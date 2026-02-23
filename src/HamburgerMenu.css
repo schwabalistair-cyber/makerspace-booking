@@ -222,6 +222,146 @@
   white-space: nowrap;
 }
 
+/* Clickable booking list items */
+.drawer-booking-item {
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+}
+
+.drawer-booking-item:last-child {
+  border-bottom: none;
+}
+
+.drawer-booking-item:hover {
+  background: #f8f9fa;
+  margin: 0 -20px;
+  padding: 12px 20px;
+  border-radius: 6px;
+}
+
+/* Booking detail field rows */
+.drawer-detail-field {
+  margin-bottom: 14px;
+}
+
+/* Detail view action buttons row */
+.drawer-detail-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* Modify button (blue) */
+.drawer-action-btn {
+  width: 100%;
+  padding: 12px;
+  background: #2980b9;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.drawer-action-btn:hover {
+  background: #1f6692;
+}
+
+/* Cancel booking button (red outline) */
+.drawer-cancel-btn {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  color: #e74c3c;
+  border: 2px solid #e74c3c;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.drawer-cancel-btn:hover {
+  background: #fdf0ee;
+}
+
+/* Modify form */
+.drawer-modify-form {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.drawer-modify-input,
+.drawer-modify-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #2c3e50;
+  background: #fff;
+  box-sizing: border-box;
+  margin-bottom: 8px;
+}
+
+.drawer-modify-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.drawer-modify-cancel {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  color: #888;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.drawer-modify-cancel:hover {
+  background: #f5f5f5;
+}
+
+/* Confirmation bar */
+.drawer-confirm-bar {
+  margin-top: 20px;
+  padding: 16px;
+  background: #fff8f8;
+  border: 1px solid #f5c6c6;
+  border-radius: 8px;
+}
+
+.drawer-confirm-text {
+  font-size: 14px;
+  color: #2c3e50;
+  margin: 0 0 12px;
+}
+
+.drawer-confirm-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Error message */
+.drawer-error {
+  color: #c0392b;
+  font-size: 13px;
+  background: #fdf0ee;
+  border: 1px solid #f5c6c6;
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin: 6px 0;
+}
+
 /* Info fields */
 .drawer-info-label {
   font-size: 12px;

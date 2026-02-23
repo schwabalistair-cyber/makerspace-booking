@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import './HamburgerMenu.css';
 
+const TIME_SLOTS = [
+  '8am - 9am', '9am - 10am', '10am - 11am', '11am - 12pm',
+  '12pm - 1pm', '1pm - 2pm', '2pm - 3pm', '3pm - 4pm',
+  '4pm - 5pm', '5pm - 6pm', '6pm - 7pm', '7pm - 8pm', '8pm - 9pm'
+];
+
 function HamburgerMenu({ user, onClose, onLogout }) {
   const [activeView, setActiveView] = useState(null);
   const [bookings, setBookings] = useState([]);
@@ -8,6 +14,13 @@ function HamburgerMenu({ user, onClose, onLogout }) {
   const [purchases, setPurchases] = useState([]);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [modifying, setModifying] = useState(false);
+  const [modifyDate, setModifyDate] = useState('');
+  const [modifyTimeSlot, setModifyTimeSlot] = useState('');
+  const [actionError, setActionError] = useState('');
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
   const viewTitles = {
     bookings: 'Bookings',
@@ -75,8 +88,69 @@ function HamburgerMenu({ user, onClose, onLogout }) {
     }
   };
 
+  const handleSelectBooking = (b) => {
+    setSelectedBooking(b);
+    setModifying(false);
+    setConfirmCancel(false);
+    setActionError('');
+  };
+
+  const handleBackFromDetail = () => {
+    setSelectedBooking(null);
+    setModifying(false);
+    setConfirmCancel(false);
+    setActionError('');
+  };
+
+  const handleCancelBooking = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`/api/bookings/${selectedBooking.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setActionError(data.error || 'Failed to cancel booking');
+        return;
+      }
+      setBookings(prev => prev.filter(b => b.id !== selectedBooking.id));
+      handleBackFromDetail();
+    } catch (e) {
+      setActionError('Failed to cancel booking');
+    }
+  };
+
+  const handleModifyBooking = async () => {
+    if (!modifyDate || !modifyTimeSlot) {
+      setActionError('Please select a date and time slot');
+      return;
+    }
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`/api/bookings/${selectedBooking.id}`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: modifyDate, timeSlot: modifyTimeSlot })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setActionError(data.error || 'Failed to modify booking');
+        return;
+      }
+      setBookings(prev => prev.map(b => b.id === selectedBooking.id ? data : b));
+      setSelectedBooking(data);
+      setModifying(false);
+      setActionError('');
+    } catch (e) {
+      setActionError('Failed to modify booking');
+    }
+  };
+
   const upcomingBookings = bookings.filter(b => b.date >= today);
   const pastBookings = bookings.filter(b => b.date < today);
+
+  const isUpcoming = selectedBooking && selectedBooking.date >= today;
 
   return (
     <>
@@ -85,12 +159,17 @@ function HamburgerMenu({ user, onClose, onLogout }) {
 
         <div className="drawer-header">
           {activeView ? (
-            <button className="drawer-back-btn" onClick={() => setActiveView(null)}>&#8592;</button>
+            <button
+              className="drawer-back-btn"
+              onClick={selectedBooking ? handleBackFromDetail : () => setActiveView(null)}
+            >&#8592;</button>
           ) : (
             <button className="drawer-close-btn" onClick={onClose}>&times;</button>
           )}
           <span className="drawer-title">
-            {activeView ? viewTitles[activeView] : user.name}
+            {activeView
+              ? (selectedBooking ? 'Booking Details' : viewTitles[activeView])
+              : user.name}
           </span>
         </div>
 
@@ -113,14 +192,14 @@ function HamburgerMenu({ user, onClose, onLogout }) {
             </>
           )}
 
-          {!loading && activeView === 'bookings' && (
+          {!loading && activeView === 'bookings' && !selectedBooking && (
             <div className="drawer-view">
               <div className="drawer-section-title">Upcoming</div>
               {upcomingBookings.length === 0 && (
                 <p className="drawer-empty">No upcoming bookings.</p>
               )}
               {upcomingBookings.map((b, i) => (
-                <div key={i} className="drawer-item">
+                <div key={i} className="drawer-booking-item" onClick={() => handleSelectBooking(b)}>
                   <div className="drawer-item-main">{b.date} &mdash; {b.timeSlot}</div>
                   <div className="drawer-item-detail">{b.shopArea}{b.rateLabel ? ` · ${b.rateLabel}` : ''}</div>
                 </div>
@@ -131,11 +210,109 @@ function HamburgerMenu({ user, onClose, onLogout }) {
                 <p className="drawer-empty">No past bookings.</p>
               )}
               {pastBookings.map((b, i) => (
-                <div key={i} className="drawer-item">
+                <div key={i} className="drawer-booking-item" onClick={() => handleSelectBooking(b)}>
                   <div className="drawer-item-main">{b.date} &mdash; {b.timeSlot}</div>
                   <div className="drawer-item-detail">{b.shopArea}{b.rateLabel ? ` · ${b.rateLabel}` : ''}</div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {!loading && activeView === 'bookings' && selectedBooking && (
+            <div className="drawer-view">
+              <div className="drawer-detail-field">
+                <div className="drawer-info-label">Area</div>
+                <div className="drawer-info-value">{selectedBooking.shopArea}</div>
+              </div>
+              <div className="drawer-detail-field">
+                <div className="drawer-info-label">Date</div>
+                <div className="drawer-info-value">{selectedBooking.date}</div>
+              </div>
+              <div className="drawer-detail-field">
+                <div className="drawer-info-label">Time</div>
+                <div className="drawer-info-value">{selectedBooking.timeSlot}</div>
+              </div>
+              {selectedBooking.rateLabel && (
+                <div className="drawer-detail-field">
+                  <div className="drawer-info-label">Rate</div>
+                  <div className="drawer-info-value">{selectedBooking.rateLabel}</div>
+                </div>
+              )}
+
+              {isUpcoming && (
+                <>
+                  {!modifying && !confirmCancel && (
+                    <div className="drawer-detail-actions">
+                      <button
+                        className="drawer-action-btn"
+                        onClick={() => {
+                          setModifyDate(selectedBooking.date);
+                          setModifyTimeSlot(selectedBooking.timeSlot);
+                          setModifying(true);
+                          setActionError('');
+                        }}
+                      >
+                        Modify
+                      </button>
+                      <button
+                        className="drawer-cancel-btn"
+                        onClick={() => { setConfirmCancel(true); setActionError(''); }}
+                      >
+                        Cancel Booking
+                      </button>
+                    </div>
+                  )}
+
+                  {modifying && (
+                    <div className="drawer-modify-form">
+                      <div className="drawer-info-label">New Date</div>
+                      <input
+                        type="date"
+                        className="drawer-modify-input"
+                        value={modifyDate}
+                        min={today}
+                        onChange={e => setModifyDate(e.target.value)}
+                      />
+                      <div className="drawer-info-label">New Time Slot</div>
+                      <select
+                        className="drawer-modify-select"
+                        value={modifyTimeSlot}
+                        onChange={e => setModifyTimeSlot(e.target.value)}
+                      >
+                        {TIME_SLOTS.map(slot => (
+                          <option key={slot} value={slot}>{slot}</option>
+                        ))}
+                      </select>
+                      {actionError && <div className="drawer-error">{actionError}</div>}
+                      <div className="drawer-modify-actions">
+                        <button className="drawer-action-btn" onClick={handleModifyBooking}>Save</button>
+                        <button
+                          className="drawer-modify-cancel"
+                          onClick={() => { setModifying(false); setActionError(''); }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {confirmCancel && (
+                    <div className="drawer-confirm-bar">
+                      <p className="drawer-confirm-text">Are you sure you want to cancel this booking?</p>
+                      {actionError && <div className="drawer-error">{actionError}</div>}
+                      <div className="drawer-confirm-actions">
+                        <button className="drawer-cancel-btn" onClick={handleCancelBooking}>Yes, Cancel</button>
+                        <button
+                          className="drawer-modify-cancel"
+                          onClick={() => { setConfirmCancel(false); setActionError(''); }}
+                        >
+                          No, Keep It
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           )}
 
