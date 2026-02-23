@@ -23,7 +23,9 @@
   display: flex;
   flex-direction: column;
   border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2), 0 24px 64px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  outline: none;
   animation: popIn 0.2s ease-out;
   overflow: hidden;
 }
@@ -39,7 +41,7 @@
   align-items: center;
   gap: 12px;
   padding: 20px 24px;
-  background: #2c3e50;
+  background: linear-gradient(135deg, #1a6dbd 0%, #5ab4f0 100%);
   color: white;
   flex-shrink: 0;
 }
@@ -99,12 +101,12 @@
 }
 
 .drawer-nav-item--admin {
-  color: #0f766e;
+  color: #1a6dbd;
   font-weight: 600;
 }
 
 .drawer-nav-item--admin:hover {
-  background: #f0fdf9;
+  background: #e8f4fd;
 }
 
 .drawer-nav-arrow {
@@ -266,7 +268,7 @@
 .drawer-action-btn {
   width: 100%;
   padding: 12px;
-  background: #2980b9;
+  background: #1a6dbd;
   color: white;
   border: none;
   border-radius: 6px;
@@ -276,7 +278,7 @@
 }
 
 .drawer-action-btn:hover {
-  background: #1f6692;
+  background: #155fa8;
 }
 
 /* Cancel booking button (red outline) */
@@ -474,7 +476,7 @@
 
 /* Small inline edit button */
 .drawer-edit-btn {
-  background: #2980b9;
+  background: linear-gradient(135deg, #1a6dbd 0%, #5ab4f0 100%);
   border: none;
   color: #fff;
   font-size: 11px;
@@ -490,7 +492,7 @@
 }
 
 .drawer-edit-btn:hover {
-  background: #1f6692;
+  background: linear-gradient(135deg, #155fa8 0%, #48a8e8 100%);
 }
 
 /* Info fields */
