@@ -1,34 +1,55 @@
 .App {
   max-width: 600px;
-  margin: 50px auto;
+  margin: 0 auto;
   padding: 20px;
   font-family: Arial, sans-serif;
 }
 
-header {
-  background-color: #2c3e50;
-  color: white;
-  padding: 20px;
-  border-radius: 8px;
+.header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #fff;
+  border-bottom: 1px solid #e0e0e0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  margin: -20px -20px 20px -20px;
+}
+
+.header-logo {
+  height: 50px;
+  width: auto;
+  margin-left: auto;
+}
+
+.hamburger-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  width: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.hamburger-btn span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: #2c3e50;
+  border-radius: 2px;
+}
+
+.hamburger-btn:hover span {
+  background: #3498db;
 }
 
 h1 {
   margin: 0;
-}
-
-.header-wrapper {
-  margin-bottom: 30px;
-}
-
-.logo-bar {
-  display: flex;
-  justify-content: flex-end;
-  padding: 0 4px 8px;
-}
-
-.header-logo {
-  height: 60px;
-  width: auto;
 }
 
 h2 {
@@ -116,52 +137,4 @@ button:hover {
 
 .change-button:hover {
   background-color: #5a6268;
-}
-
-.user-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 10px;
-}
-
-.user-info span {
-  font-size: 14px;
-}
-
-.logout-btn {
-  background-color: #e74c3c;
-  padding: 8px 16px;
-  font-size: 14px;
-  width: auto;
-}
-
-.logout-btn:hover {
-  background-color: #c0392b;
-}
-
-.instructor-btn {
-  background-color: #27ae60;
-  color: white;
-  padding: 8px 16px;
-  font-size: 14px;
-  width: auto;
-  margin-right: 10px;
-}
-
-.instructor-btn:hover {
-  background-color: #219a52;
-}
-
-.admin-btn {
-  background-color: #2c3e50;
-  color: white;
-  padding: 8px 16px;
-  font-size: 14px;
-  width: auto;
-  margin-right: 10px;
-}
-
-.admin-btn:hover {
-  background-color: #34495e;
 }

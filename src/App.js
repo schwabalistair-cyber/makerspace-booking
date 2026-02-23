@@ -4,6 +4,7 @@ import BookingCalendar from './BookingCalendar';
 import Auth from './Auth';
 import AdminDashboard from './AdminDashboard';
 import InstructorDashboard from './InstructorDashboard';
+import HamburgerMenu from './HamburgerMenu';
 
 function App() {
   const [formData, setFormData] = useState({
@@ -18,6 +19,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showInstructor, setShowInstructor] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
 
   // Check if user is already logged in, and refresh from server
   useEffect(() => {
@@ -111,30 +113,13 @@ function App() {
 
   // Header component used in all views
   const Header = () => (
-    <div className="header-wrapper">
-      <div className="logo-bar">
-        <img src="/diycave-logo.svg" alt="DIY Cave" className="header-logo" />
-      </div>
-      <header>
-      <div className="user-info">
-        {user && user.isInstructor && (
-          <button className="instructor-btn" onClick={() => setShowInstructor(true)}>
-            Upcoming Classes
-          </button>
-        )}
-        {user && user.userType === 'admin' && (
-          <button className="admin-btn" onClick={() => setShowAdmin(true)}>
-            Admin Dashboard
-          </button>
-        )}
-        {user && (
-          <span>Welcome, {user.name} ({user.userType})</span>
-        )}
-        {user && (
-          <button className="logout-btn" onClick={handleLogout}>Logout</button>
-        )}
-      </div>
-    </header>
+    <div className="header-bar">
+      {user && (
+        <button className="hamburger-btn" onClick={() => setShowMenu(true)} aria-label="Open menu">
+          <span /><span /><span />
+        </button>
+      )}
+      <img src="/diycave-logo.svg" alt="DIY Cave" className="header-logo" />
     </div>
   );
 
@@ -158,6 +143,13 @@ function App() {
     return (
       <div className="App">
         <Header />
+        {showMenu && (
+          <HamburgerMenu
+            user={user}
+            onClose={() => setShowMenu(false)}
+            onLogout={() => { handleLogout(); setShowMenu(false); }}
+          />
+        )}
         <main>
           <div className="success-message">
             <h2>✓ Booking Confirmed!</h2>
@@ -180,6 +172,13 @@ function App() {
   return (
     <div className="App">
       <Header />
+      {showMenu && (
+        <HamburgerMenu
+          user={user}
+          onClose={() => setShowMenu(false)}
+          onLogout={() => { handleLogout(); setShowMenu(false); }}
+        />
+      )}
       <main>
         <BookingCalendar onSelectSlot={handleSlotSelection} user={user} />
       </main>
