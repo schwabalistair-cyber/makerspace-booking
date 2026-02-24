@@ -353,7 +353,7 @@ function HamburgerMenu({ user, onClose, onLogout, onAdminDashboard }) {
               )}
               {upcomingBookings.map((b, i) => (
                 <div key={i} className="drawer-booking-item" onClick={() => handleSelectBooking(b)}>
-                  <div className="drawer-item-main">{b.date} &mdash; {b.timeSlot}</div>
+                  <div className="drawer-item-main">{formatDate(b.date)} &mdash; {b.timeSlot}</div>
                   <div className="drawer-item-detail">{b.shopArea}{b.rateLabel ? ` · ${b.rateLabel}` : ''}</div>
                 </div>
               ))}
@@ -364,7 +364,7 @@ function HamburgerMenu({ user, onClose, onLogout, onAdminDashboard }) {
               )}
               {pastBookings.map((b, i) => (
                 <div key={i} className="drawer-booking-item" onClick={() => handleSelectBooking(b)}>
-                  <div className="drawer-item-main">{b.date} &mdash; {b.timeSlot}</div>
+                  <div className="drawer-item-main">{formatDate(b.date)} &mdash; {b.timeSlot}</div>
                   <div className="drawer-item-detail">{b.shopArea}{b.rateLabel ? ` · ${b.rateLabel}` : ''}</div>
                 </div>
               ))}
@@ -380,7 +380,7 @@ function HamburgerMenu({ user, onClose, onLogout, onAdminDashboard }) {
               </div>
               <div className="drawer-detail-field">
                 <div className="drawer-info-label">Date</div>
-                <div className="drawer-info-value">{selectedBooking.date}</div>
+                <div className="drawer-info-value">{formatDate(selectedBooking.date)}</div>
               </div>
               <div className="drawer-detail-field">
                 <div className="drawer-info-label">Time</div>
