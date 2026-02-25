@@ -511,6 +511,15 @@
   margin-bottom: 14px;
 }
 
+/* Cert group spacing */
+.drawer-cert-group {
+  margin-bottom: 8px;
+}
+
+.drawer-cert-group:last-child {
+  margin-bottom: 0;
+}
+
 /* Earned cert badge (green) */
 .drawer-cert-badge.earned {
   background: #d4edda;

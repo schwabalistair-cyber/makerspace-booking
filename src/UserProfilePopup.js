@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './UserProfilePopup.css';
-import { ALL_CERT_AREAS } from './certConfig';
+import { ALL_CERT_AREAS, CERT_GROUPS } from './certConfig';
 
 function UserProfilePopup({ profile, onClose, onProfileUpdate }) {
   const [activeTab, setActiveTab] = useState('info');
@@ -199,10 +199,18 @@ function UserProfilePopup({ profile, onClose, onProfileUpdate }) {
                   <h3>Add Certification</h3>
                   <div className="add-cert-row">
                     <select value={newCertArea} onChange={e => setNewCertArea(e.target.value)}>
-                      <option value="">-- Select shop area --</option>
-                      {availableAreas.map(area => (
-                        <option key={area} value={area}>{area}</option>
-                      ))}
+                      <option value="">-- Select certification --</option>
+                      {CERT_GROUPS.map(({ group, areas }) => {
+                        const groupAvailable = areas.filter(a => availableAreas.includes(a));
+                        if (groupAvailable.length === 0) return null;
+                        return (
+                          <optgroup key={group} label={group}>
+                            {groupAvailable.map(area => (
+                              <option key={area} value={area}>{area}</option>
+                            ))}
+                          </optgroup>
+                        );
+                      })}
                     </select>
                     <button className="add-btn" onClick={handleAddCert} disabled={!newCertArea}>Add</button>
                   </div>

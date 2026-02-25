@@ -148,4 +148,16 @@ for (const [area, config] of Object.entries(CERT_REQUIREMENTS)) {
 // All certifiable area names (for admin dropdown, menu display, etc.)
 const ALL_CERT_AREAS = Object.keys(CERT_REQUIREMENTS);
 
-module.exports = { CERT_REQUIREMENTS, CLASS_TO_CERTS, ALL_CERT_AREAS };
+// Grouped certifications for display (admin dropdown, menu view)
+const CERT_GROUPS = [
+  { group: 'Woodshop', areas: ['Table Saw', 'Router Table', 'Xcarve CNC', 'Wood Lathe - Mini Jet', 'Wood Lathe - Non-Powermatic', 'Wood Lathe - Powermatic'] },
+  { group: 'Metal Shop', areas: ['MIG Welder', 'TIG Welder', 'CNC Plasma', 'Metal Lathes - Grizzly Mill', 'Metal Lathes - Metal Lathe', 'Metal Lathes - Small Metal Lathe'] },
+  { group: 'Forge', areas: ['Forge'] },
+  { group: 'Glass', areas: ['Fused Glass', 'Glass Studio'] },
+  { group: 'Lasers & 3D Printing', areas: ['Boss Laser', 'Glowforge', '3D Printer'] },
+  { group: 'Jewelry', areas: ['Jewelry Bench'] },
+  { group: 'Textiles', areas: ['Sewing Space'] },
+  { group: 'Lapidary', areas: ['Lapidary'] }
+];
+
+module.exports = { CERT_REQUIREMENTS, CLASS_TO_CERTS, ALL_CERT_AREAS, CERT_GROUPS };

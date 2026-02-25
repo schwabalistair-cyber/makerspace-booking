@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './HamburgerMenu.css';
-import { CERT_REQUIREMENTS, ALL_CERT_AREAS } from './certConfig';
+import { CERT_REQUIREMENTS, ALL_CERT_AREAS, CERT_GROUPS } from './certConfig';
 
 const TIME_SLOTS = [
   '8am - 9am', '9am - 10am', '10am - 11am', '11am - 12pm',
@@ -572,41 +572,40 @@ function HamburgerMenu({ user, onClose, onLogout, onAdminDashboard }) {
 
           {!loading && activeView === 'certifications' && (
             <div className="drawer-view">
-              <div className="drawer-section-title">Earned Certifications</div>
-              {certs.length === 0 ? (
-                <p className="drawer-empty">No certifications yet.</p>
-              ) : (
-                certs.map((cert, i) => (
-                  <div key={i} className="drawer-item">
-                    <span className="drawer-cert-badge earned">{cert.shopArea}</span>
-                    {cert.certifiedAt && (
-                      <div className="drawer-item-detail">
-                        Certified {new Date(cert.certifiedAt).toLocaleDateString()}
-                        {cert.certifiedByName && ` by ${cert.certifiedByName}`}
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-
               {(() => {
                 const earnedAreas = certs.map(c => c.shopArea);
-                const unearnedAreas = ALL_CERT_AREAS.filter(a => !earnedAreas.includes(a));
-                if (unearnedAreas.length === 0) return null;
-                return (
-                  <>
-                    <div className="drawer-section-title">Available Certifications</div>
-                    {unearnedAreas.map((area, i) => {
-                      const req = CERT_REQUIREMENTS[area];
-                      return (
-                        <div key={i} className="drawer-item">
-                          <span className="drawer-cert-badge unearned">{area}</span>
-                          <div className="drawer-item-detail">{req.message}</div>
-                        </div>
-                      );
-                    })}
-                  </>
-                );
+                return CERT_GROUPS.map(({ group, areas }) => {
+                  const groupEarned = areas.filter(a => earnedAreas.includes(a));
+                  const groupUnearned = areas.filter(a => !earnedAreas.includes(a));
+                  return (
+                    <div key={group} className="drawer-cert-group">
+                      <div className="drawer-section-title">{group}</div>
+                      {groupEarned.map(area => {
+                        const cert = certs.find(c => c.shopArea === area);
+                        return (
+                          <div key={area} className="drawer-item">
+                            <span className="drawer-cert-badge earned">{area}</span>
+                            {cert?.certifiedAt && (
+                              <div className="drawer-item-detail">
+                                Certified {new Date(cert.certifiedAt).toLocaleDateString()}
+                                {cert.certifiedByName && ` by ${cert.certifiedByName}`}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                      {groupUnearned.map(area => {
+                        const req = CERT_REQUIREMENTS[area];
+                        return (
+                          <div key={area} className="drawer-item">
+                            <span className="drawer-cert-badge unearned">{area}</span>
+                            <div className="drawer-item-detail">{req.message}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                });
               })()}
             </div>
           )}
