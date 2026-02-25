@@ -309,7 +309,7 @@ function AdminDashboard({ user, onBack }) {
                   <span className="user-email-cell">
                     {u.email}
                     {tableSawUsers.has(u.id) && (
-                      <span className="table-saw-badge" title="Table Saw Certified">&#129690;</span>
+                      <span className="table-saw-badge" title="Table Saw Certified">&#129667;</span>
                     )}
                   </span>
                   <span>
