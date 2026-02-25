@@ -429,6 +429,20 @@ app.delete('/api/users/:id/certifications/:certId', authenticate, requireAdmin, 
   }
 });
 
+// GET all certifications (admin only, for user list badges)
+app.get('/api/certifications/all', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT user_id, shop_area FROM certifications');
+    res.json(result.rows.map(r => ({
+      userId: r.user_id.toString(),
+      shopArea: r.shop_area
+    })));
+  } catch (error) {
+    console.error('Error fetching all certifications:', error);
+    res.status(500).json({ error: 'Failed to fetch certifications' });
+  }
+});
+
 // GET certification check for booking
 app.get('/api/certifications/check', authenticate, async (req, res) => {
   try {

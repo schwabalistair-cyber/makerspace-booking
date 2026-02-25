@@ -13,10 +13,12 @@ function AdminDashboard({ user, onBack }) {
   const [bookingForUser, setBookingForUser] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [selectedUserProfile, setSelectedUserProfile] = useState(null);
+  const [tableSawUsers, setTableSawUsers] = useState(new Set());
 
   useEffect(() => {
     fetchBookings();
     fetchUsers();
+    fetchCertifications();
   }, []);
 
   const fetchBookings = async () => {
@@ -44,6 +46,23 @@ function AdminDashboard({ user, onBack }) {
       }
     } catch (error) {
       console.error('Error fetching users:', error);
+    }
+  };
+
+  const fetchCertifications = async () => {
+    try {
+      const response = await fetch('/api/certifications/all', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const sawUsers = new Set(
+          data.filter(c => c.shopArea === 'Table Saw').map(c => c.userId)
+        );
+        setTableSawUsers(sawUsers);
+      }
+    } catch (error) {
+      console.error('Error fetching certifications:', error);
     }
   };
 
@@ -287,7 +306,12 @@ function AdminDashboard({ user, onBack }) {
               {users.map((u) => (
                 <div key={u.id} className="table-row clickable-row" onClick={() => handleUserClick(u.id)}>
                   <span>{u.name}</span>
-                  <span>{u.email}</span>
+                  <span className="user-email-cell">
+                    {u.email}
+                    {tableSawUsers.has(u.id) && (
+                      <span className="table-saw-badge" title="Table Saw Certified">&#128296;</span>
+                    )}
+                  </span>
                   <span>
                     <select
                       value={u.userType}
