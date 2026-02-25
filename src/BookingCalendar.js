@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import './BookingCalendar.css';
+import { CERT_REQUIREMENTS } from './certConfig';
 
 function BookingCalendar({ onSelectSlot, user }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -10,6 +11,8 @@ function BookingCalendar({ onSelectSlot, user }) {
   const [selectedArea, setSelectedArea] = useState('');
   const [selectedSubArea, setSelectedSubArea] = useState('');
   const [bookings, setBookings] = useState([]);
+  const [userCerts, setUserCerts] = useState([]);
+  const [certError, setCertError] = useState(null);
 
   const shopCategories = {
     'Textiles & Tech': {
@@ -29,6 +32,7 @@ function BookingCalendar({ onSelectSlot, user }) {
       'Bridgeport Mill': { capacity: 1, memberRate: 12, nonMemberRate: 24 },
       'CNC Plasma': { capacity: 1, memberRate: 24, nonMemberRate: 48 },
       'Forge': { capacity: 3, memberRate: 18, nonMemberRate: 36 },
+      'Lapidary': { capacity: 1, memberRate: 12, nonMemberRate: 24 },
       'Metal Lathes': {
         subcategories: {
           'Grizzly Mill': { capacity: 1, memberRate: 12, nonMemberRate: 24 },
@@ -50,9 +54,10 @@ function BookingCalendar({ onSelectSlot, user }) {
     }
   };
 
-  // Fetch all bookings when component loads
+  // Fetch all bookings and user certs when component loads
   useEffect(() => {
     fetchBookings();
+    fetchUserCerts();
   }, []);
 
   const fetchBookings = async () => {
@@ -67,6 +72,53 @@ function BookingCalendar({ onSelectSlot, user }) {
     } catch (error) {
       console.error('Error fetching bookings:', error);
     }
+  };
+
+  const fetchUserCerts = async () => {
+    try {
+      const response = await fetch(`/api/users/${user.id}/certifications`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUserCerts(data);
+      }
+    } catch (error) {
+      console.error('Error fetching certifications:', error);
+    }
+  };
+
+  // Check if user has certification for a given area name
+  const checkCertification = (areaName) => {
+    // Admin bypasses all cert checks
+    if (user.userType === 'admin') {
+      return { allowed: true };
+    }
+    const certReq = CERT_REQUIREMENTS[areaName];
+    // No cert requirement or tool-level only = allowed
+    if (!certReq || certReq.type !== 'area') {
+      return { allowed: true };
+    }
+    // Check if user holds the cert
+    const hasCert = userCerts.some(c => c.shopArea === areaName);
+    if (hasCert) {
+      return { allowed: true };
+    }
+    return { allowed: false, message: certReq.message };
+  };
+
+  // Check if an area button requires a cert the user doesn't have
+  const areaRequiresCert = (areaName) => {
+    if (user.userType === 'admin') return false;
+    const certReq = CERT_REQUIREMENTS[areaName];
+    if (!certReq || certReq.type !== 'area') return false;
+    return !userCerts.some(c => c.shopArea === areaName);
+  };
+
+  // Check if a subarea requires cert (uses "Parent - Sub" format)
+  const subAreaRequiresCert = (parentArea, subArea) => {
+    const fullName = `${parentArea} - ${subArea}`;
+    return areaRequiresCert(fullName);
   };
 
   // Determine allowed booking hours based on user type and day of week
@@ -245,11 +297,20 @@ function BookingCalendar({ onSelectSlot, user }) {
         alert('Please select a specific area');
         return;
       }
+
+      // Check certification before proceeding
+      const finalArea = getFinalAreaName();
+      const certCheck = checkCertification(finalArea);
+      if (!certCheck.allowed) {
+        setCertError(certCheck.message);
+        return;
+      }
+
       const rate = getRate();
       onSelectSlot({
         date: selectedDate.toISOString().split('T')[0],
         timeSlot: selectedTimeSlot,
-        shopArea: getFinalAreaName(),
+        shopArea: finalArea,
         memberRate: areaData.memberRate,
         nonMemberRate: areaData.nonMemberRate,
         rateCharged: rate.rate,
@@ -309,15 +370,19 @@ function BookingCalendar({ onSelectSlot, user }) {
         <div className="time-slots">
           <h3>3. Choose a Specific Area</h3>
           <div className="slot-grid">
-            {Object.keys(shopCategories[selectedCategory]).map((area) => (
-              <button
-                key={area}
-                className={selectedArea === area ? 'slot-button active' : 'slot-button'}
-                onClick={() => handleAreaClick(area)}
-              >
-                {area}
-              </button>
-            ))}
+            {Object.keys(shopCategories[selectedCategory]).map((area) => {
+              const needsCert = areaRequiresCert(area);
+              return (
+                <button
+                  key={area}
+                  className={`slot-button ${selectedArea === area ? 'active' : ''} ${needsCert ? 'cert-required' : ''}`}
+                  onClick={() => handleAreaClick(area)}
+                >
+                  {needsCert && <span className="lock-icon">&#128274; </span>}
+                  {area}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -326,15 +391,19 @@ function BookingCalendar({ onSelectSlot, user }) {
         <div className="time-slots">
           <h3>4. Choose Specific {selectedArea}</h3>
           <div className="slot-grid">
-            {Object.keys(shopCategories[selectedCategory][selectedArea].subcategories).map((subArea) => (
-              <button
-                key={subArea}
-                className={selectedSubArea === subArea ? 'slot-button active' : 'slot-button'}
-                onClick={() => handleSubAreaClick(subArea)}
-              >
-                {subArea}
-              </button>
-            ))}
+            {Object.keys(shopCategories[selectedCategory][selectedArea].subcategories).map((subArea) => {
+              const needsCert = subAreaRequiresCert(selectedArea, subArea);
+              return (
+                <button
+                  key={subArea}
+                  className={`slot-button ${selectedSubArea === subArea ? 'active' : ''} ${needsCert ? 'cert-required' : ''}`}
+                  onClick={() => handleSubAreaClick(subArea)}
+                >
+                  {needsCert && <span className="lock-icon">&#128274; </span>}
+                  {subArea}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -386,6 +455,16 @@ function BookingCalendar({ onSelectSlot, user }) {
           <button className="continue-button" onClick={handleContinue}>
             Continue to Booking Details
           </button>
+        </div>
+      )}
+
+      {certError && (
+        <div className="cert-error-overlay" onClick={() => setCertError(null)}>
+          <div className="cert-error-modal" onClick={e => e.stopPropagation()}>
+            <h3>Certification Required</h3>
+            <p>{certError}</p>
+            <button className="cert-error-close" onClick={() => setCertError(null)}>OK</button>
+          </div>
         </div>
       )}
     </div>

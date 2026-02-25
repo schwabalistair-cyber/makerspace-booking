@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { pool, initDb } = require('./db');
 const { authenticate, requireAdmin, requireInstructor, loginLimiter } = require('./middleware');
+const { CERT_REQUIREMENTS, CLASS_TO_CERTS } = require('./certConfig');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -46,6 +47,19 @@ app.get('/api/bookings', authenticate, async (req, res) => {
 app.post('/api/bookings', authenticate, async (req, res) => {
   try {
     const { name, email, userId, userType, date, timeSlot, shopArea, rateCharged, rateLabel, bookedByAdmin, adminId } = req.body;
+
+    // Server-side certification check
+    const certReq = CERT_REQUIREMENTS[shopArea];
+    if (certReq && certReq.type === 'area' && req.user.userType !== 'admin') {
+      const certResult = await pool.query(
+        'SELECT id FROM certifications WHERE user_id = $1 AND shop_area = $2',
+        [req.user.id, shopArea]
+      );
+      if (certResult.rows.length === 0) {
+        return res.status(403).json({ error: certReq.message });
+      }
+    }
+
     const result = await pool.query(
       `INSERT INTO bookings (name, email, user_id, user_type, date, time_slot, shop_area, rate_charged, rate_label, booked_by_admin, admin_id)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
@@ -351,6 +365,32 @@ app.get('/api/users/:id/profile', authenticate, requireAdmin, async (req, res) =
   }
 });
 
+// GET user certifications (own or admin)
+app.get('/api/users/:id/certifications', authenticate, async (req, res) => {
+  try {
+    if (req.user.id !== req.params.id && req.user.userType !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const result = await pool.query(
+      `SELECT cert.id, cert.shop_area, cert.certified_at, u.name AS certified_by_name
+       FROM certifications cert
+       LEFT JOIN users u ON u.id = cert.certified_by
+       WHERE cert.user_id = $1
+       ORDER BY cert.certified_at DESC`,
+      [req.params.id]
+    );
+    res.json(result.rows.map(r => ({
+      id: r.id.toString(),
+      shopArea: r.shop_area,
+      certifiedAt: r.certified_at,
+      certifiedByName: r.certified_by_name
+    })));
+  } catch (error) {
+    console.error('Error fetching certifications:', error);
+    res.status(500).json({ error: 'Failed to fetch certifications' });
+  }
+});
+
 // POST add certification (admin only)
 app.post('/api/users/:id/certifications', authenticate, requireAdmin, async (req, res) => {
   try {
@@ -386,6 +426,39 @@ app.delete('/api/users/:id/certifications/:certId', authenticate, requireAdmin, 
   } catch (error) {
     console.error('Error removing certification:', error);
     res.status(500).json({ error: 'Failed to remove certification' });
+  }
+});
+
+// GET certification check for booking
+app.get('/api/certifications/check', authenticate, async (req, res) => {
+  try {
+    const { shopArea } = req.query;
+    if (!shopArea) {
+      return res.status(400).json({ error: 'shopArea query parameter is required' });
+    }
+    const certReq = CERT_REQUIREMENTS[shopArea];
+    if (!certReq || certReq.type !== 'area') {
+      return res.json({ allowed: true });
+    }
+    if (req.user.userType === 'admin') {
+      return res.json({ allowed: true });
+    }
+    const certResult = await pool.query(
+      'SELECT id FROM certifications WHERE user_id = $1 AND shop_area = $2',
+      [req.user.id, shopArea]
+    );
+    if (certResult.rows.length > 0) {
+      return res.json({ allowed: true });
+    }
+    res.json({
+      allowed: false,
+      message: certReq.message,
+      method: certReq.method,
+      qualifyingClasses: certReq.qualifyingClasses
+    });
+  } catch (error) {
+    console.error('Error checking certification:', error);
+    res.status(500).json({ error: 'Failed to check certification' });
   }
 });
 
@@ -849,6 +922,45 @@ app.post('/api/classes/:id/attendance', authenticate, async (req, res) => {
       [req.params.id, enrolledStudentId, sessionDate, present, present ? new Date() : null]
     );
     const row = result.rows[0];
+
+    // Auto-grant certifications when all sessions attended
+    if (present) {
+      try {
+        const classData = await pool.query('SELECT title, sessions FROM classes WHERE id = $1', [req.params.id]);
+        if (classData.rows.length > 0) {
+          const classTitle = classData.rows[0].title;
+          const sessions = classData.rows[0].sessions; // JSONB array
+          const certAreas = CLASS_TO_CERTS[classTitle];
+          if (certAreas && certAreas.length > 0 && Array.isArray(sessions)) {
+            // Get user_id from enrolled_students
+            const studentRow = await pool.query(
+              'SELECT user_id FROM enrolled_students WHERE id = $1',
+              [enrolledStudentId]
+            );
+            if (studentRow.rows.length > 0 && studentRow.rows[0].user_id) {
+              const studentUserId = studentRow.rows[0].user_id;
+              // Count present attendance records for this student in this class
+              const attendanceCount = await pool.query(
+                'SELECT COUNT(*) FROM attendance WHERE class_id = $1 AND enrolled_student_id = $2 AND present = true',
+                [req.params.id, enrolledStudentId]
+              );
+              const presentCount = parseInt(attendanceCount.rows[0].count);
+              if (presentCount >= sessions.length) {
+                for (const area of certAreas) {
+                  await pool.query(
+                    'INSERT INTO certifications (user_id, shop_area, certified_by) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
+                    [studentUserId, area, req.user.id]
+                  );
+                }
+              }
+            }
+          }
+        }
+      } catch (certError) {
+        console.error('Error auto-granting certification (non-fatal):', certError);
+      }
+    }
+
     res.json({
       id: row.id.toString(),
       classId: row.class_id.toString(),

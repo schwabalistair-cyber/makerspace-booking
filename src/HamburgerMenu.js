@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './HamburgerMenu.css';
+import { CERT_REQUIREMENTS, ALL_CERT_AREAS } from './certConfig';
 
 const TIME_SLOTS = [
   '8am - 9am', '9am - 10am', '10am - 11am', '11am - 12pm',
@@ -571,17 +572,42 @@ function HamburgerMenu({ user, onClose, onLogout, onAdminDashboard }) {
 
           {!loading && activeView === 'certifications' && (
             <div className="drawer-view">
-              {certs.length === 0 && (
+              <div className="drawer-section-title">Earned Certifications</div>
+              {certs.length === 0 ? (
                 <p className="drawer-empty">No certifications yet.</p>
+              ) : (
+                certs.map((cert, i) => (
+                  <div key={i} className="drawer-item">
+                    <span className="drawer-cert-badge earned">{cert.shopArea}</span>
+                    {cert.certifiedAt && (
+                      <div className="drawer-item-detail">
+                        Certified {new Date(cert.certifiedAt).toLocaleDateString()}
+                        {cert.certifiedByName && ` by ${cert.certifiedByName}`}
+                      </div>
+                    )}
+                  </div>
+                ))
               )}
-              {certs.map((cert, i) => (
-                <div key={i} className="drawer-item">
-                  <span className="drawer-cert-badge">{cert.shopArea || cert.name || cert}</span>
-                  {cert.certifiedDate && (
-                    <div className="drawer-item-detail">Certified: {cert.certifiedDate}</div>
-                  )}
-                </div>
-              ))}
+
+              {(() => {
+                const earnedAreas = certs.map(c => c.shopArea);
+                const unearnedAreas = ALL_CERT_AREAS.filter(a => !earnedAreas.includes(a));
+                if (unearnedAreas.length === 0) return null;
+                return (
+                  <>
+                    <div className="drawer-section-title">Available Certifications</div>
+                    {unearnedAreas.map((area, i) => {
+                      const req = CERT_REQUIREMENTS[area];
+                      return (
+                        <div key={i} className="drawer-item">
+                          <span className="drawer-cert-badge unearned">{area}</span>
+                          <div className="drawer-item-detail">{req.message}</div>
+                        </div>
+                      );
+                    })}
+                  </>
+                );
+              })()}
             </div>
           )}
 

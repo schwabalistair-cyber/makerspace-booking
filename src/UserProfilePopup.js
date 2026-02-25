@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
 import './UserProfilePopup.css';
-
-const SHOP_AREAS = [
-  'Woodshop', 'Metal Shop', 'Laser Cutters', '3D Printers', 'Textiles',
-  'Electronics', 'Glass Shop', 'Jewelry', 'Automotive', 'Blacksmith'
-];
+import { ALL_CERT_AREAS } from './certConfig';
 
 function UserProfilePopup({ profile, onClose, onProfileUpdate }) {
   const [activeTab, setActiveTab] = useState('info');
@@ -99,7 +95,7 @@ function UserProfilePopup({ profile, onClose, onProfileUpdate }) {
 
   // Filter out already-certified areas for the dropdown
   const certifiedAreas = certifications.map(c => c.shopArea);
-  const availableAreas = SHOP_AREAS.filter(a => !certifiedAreas.includes(a));
+  const availableAreas = ALL_CERT_AREAS.filter(a => !certifiedAreas.includes(a));
 
   const unpaidInvoices = purchases.filter(p => p.type === 'invoice' && p.status === 'unpaid');
 
