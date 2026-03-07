@@ -96,6 +96,67 @@
   border-top: 1px solid #eee;
 }
 
+.policy-section {
+  margin-bottom: 20px;
+}
+
+.policy-label {
+  display: block;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 6px;
+}
+
+.policy-scroll-box {
+  height: 200px;
+  overflow-y: scroll;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #444;
+  background: #fafafa;
+}
+
+.policy-scroll-box p {
+  margin: 0 0 6px 0;
+}
+
+.policy-scroll-hint {
+  text-align: center;
+  font-size: 12px;
+  color: #888;
+  margin: 6px 0 4px;
+}
+
+.policy-checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 14px;
+  color: #2c3e50;
+  margin-top: 8px;
+  cursor: pointer;
+}
+
+.policy-checkbox-label input[type="checkbox"] {
+  width: auto;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.policy-checkbox-disabled {
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.auth-box button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .error-message {
   background-color: #fee;
   border: 1px solid #fcc;
